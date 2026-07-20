@@ -258,20 +258,19 @@
         <a href="profile.html">👤<span>Profile</span></a>
         <a href="referral.html">🔗<span>Referral</span></a>
         <a href="admin.html" id="adminNavLink" style="display:none;">⚙️<span>Admin</span></a>
-        <a href="ads.html">📢<span>Ads</span></a>
     </div>
 </div>
 
 <script src="ads.js"></script>
 <script>
     // ================================================================
-    // GAME CODE (FULL) + AD INTEGRATION
+    // GAME CODE + AD INTEGRATION
     // ================================================================
 
     (function() {
         'use strict';
 
-        // --- GAME CONSTANTS & STATE (same as before) ---
+        // --- GAME CONSTANTS ---
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const overlay = document.getElementById('gameOverOverlay');
@@ -476,7 +475,6 @@
             spawnRow();
             updateRank();
             showNotification('💥 Let\'s Go!', 'Smash for cash!');
-            // Reset the reward button visibility
             rewardBtn.style.display = 'block';
         }
 
@@ -863,17 +861,15 @@
                 goSub.textContent = 'Better luck next time!';
             }
 
-            // ===== AD INTEGRATION: Check if ad should show after game =====
+            // ===== AD INTEGRATION =====
             if (typeof shouldShowAdAfterGame === 'function') {
                 if (shouldShowAdAfterGame()) {
-                    // Show ad before allowing restart
                     restartBtn.style.display = 'none';
                     rewardBtn.style.display = 'none';
                     if (typeof showReplayAd === 'function') {
                         showReplayAd(function() {
                             restartBtn.style.display = 'block';
                             rewardBtn.style.display = 'block';
-                            // Reset counter after ad
                             if (typeof resetGameCounter === 'function') {
                                 resetGameCounter();
                             }
@@ -883,7 +879,6 @@
             }
         }
 
-        // ===== RESTART GAME (with optional ad) =====
         function restartGame() {
             initGame();
             isPaused = false;
@@ -897,35 +892,29 @@
 
         overlay.addEventListener('click', function(e) {
             if (e.target === overlay) {
-                // Only restart if no ad is showing (buttons visible)
                 if (restartBtn.style.display !== 'none') {
                     restartGame();
                 }
             }
         });
 
-        // ===== REWARD AD (2x/4x Score) =====
+        // ===== REWARD AD =====
         rewardBtn.addEventListener('click', function() {
             if (typeof handleRewardAd === 'function') {
                 handleRewardAd(currentScore, function(newScore, multiplier) {
-                    // Apply bonus
                     currentScore = newScore;
                     document.getElementById('gameScore').textContent = currentScore;
                     finalScore.textContent = currentScore;
-                    // Update high score if needed
                     if (currentScore > highScore) {
                         highScore = currentScore;
                         localStorage.setItem('bs_highScore', highScore);
                         document.getElementById('gameHigh').textContent = highScore;
                         finalHigh.textContent = highScore;
                     }
-                    // Show notification
                     showNotification('🎉 ' + multiplier + 'x Bonus Applied!', 'New Score: ' + currentScore);
-                    // Hide reward button after use
                     rewardBtn.style.display = 'none';
                 });
             } else {
-                // Fallback: just give a random bonus
                 const multiplier = Math.random() < 0.3 ? 4 : 2;
                 currentScore = currentScore * multiplier;
                 document.getElementById('gameScore').textContent = currentScore;
@@ -1186,16 +1175,13 @@
             this.classList.toggle('on', vibeOn);
         });
 
-        // --- SHOW ADMIN NAV ---
         if (window.location.search.includes('admin=true')) {
             document.getElementById('adminNavLink').style.display = 'flex';
         }
 
-        // --- INIT ---
         initGame();
         gameLoop();
 
-        // Save high score periodically
         setInterval(() => {
             if (currentScore > highScore) {
                 highScore = currentScore;
