@@ -34,6 +34,7 @@
         .login-box .footer-text { font-size:11px; color:#555588; margin-top:16px; }
         .login-box .loading { display:none; font-size:14px; color:#8888bb; margin-top:8px; }
         .login-box .loading.show { display:block; }
+        .login-box .hint { font-size:11px; color:#8888bb; margin-top:4px; text-align:left; }
     </style>
 </head>
 <body>
@@ -44,8 +45,9 @@
         <div class="tagline">💰 Play · Earn · Win</div>
 
         <div class="input-group">
-            <label>👤 Enter Username</label>
-            <input type="text" id="usernameInput" placeholder="e.g. KingKhan" maxlength="20" autocomplete="off" />
+            <label>👤 Choose a Username</label>
+            <input type="text" id="usernameInput" placeholder="e.g. KingKhan007" maxlength="20" autocomplete="off" />
+            <div class="hint">🔹 8–20 characters · Only letters (A-Z) and numbers (0-9)</div>
         </div>
 
         <div class="ref-display" id="refDisplay" style="display:none;">
@@ -60,7 +62,7 @@
 
         <div class="warning">
             ⚠️ Username can only be set ONCE.<br>
-            If you forget it, your account is lost.
+            If you forget it, your account is lost forever.
         </div>
 
         <div class="footer-text">🔒 No password required · Just your unique username</div>
@@ -109,13 +111,14 @@
         async function handleLogin() {
             const username = usernameInput.value.trim();
 
+            // --- New validation rules ---
             if (!username) {
                 statusMsg.textContent = '❌ Please enter a username.';
                 statusMsg.className = 'error-msg';
                 return;
             }
-            if (username.length < 3) {
-                statusMsg.textContent = '❌ Username must be at least 3 characters.';
+            if (username.length < 8) {
+                statusMsg.textContent = '❌ Username must be at least 8 characters.';
                 statusMsg.className = 'error-msg';
                 return;
             }
@@ -125,7 +128,7 @@
                 return;
             }
             if (!/^[a-zA-Z0-9]+$/.test(username)) {
-                statusMsg.textContent = '❌ Only letters and numbers allowed.';
+                statusMsg.textContent = '❌ Only letters and numbers allowed (no spaces or symbols).';
                 statusMsg.className = 'error-msg';
                 return;
             }
@@ -135,9 +138,11 @@
             statusMsg.textContent = '';
 
             try {
+                // Check if user exists (case-insensitive)
                 const existingUser = await window.getUser(username);
 
                 if (existingUser) {
+                    // Existing user: login
                     localStorage.setItem('bs_username', existingUser.username);
                     statusMsg.textContent = '✅ Welcome back, ' + existingUser.username + '!';
                     statusMsg.className = 'success-msg';
@@ -147,17 +152,20 @@
                     return;
                 }
 
+                // New user: create account
                 const userId = 'BSC' + String(Date.now()).slice(-6) + String(Math.floor(Math.random() * 1000)).padStart(3, '0');
                 const created = await window.createUser(username, userId, refCode || null);
 
                 if (!created) {
-                    statusMsg.textContent = '❌ Failed to create account. Please try again.';
+                    // If creation fails, it might be due to duplicate (but we already checked)
+                    statusMsg.textContent = '❌ This username is already taken or an error occurred.';
                     statusMsg.className = 'error-msg';
                     loginBtn.disabled = false;
                     loadingMsg.classList.remove('show');
                     return;
                 }
 
+                // Add referral if applicable
                 if (refCode) {
                     const referrals = await window.getAllReferrals() || [];
                     const already = referrals.find(r => r.referee === username);
