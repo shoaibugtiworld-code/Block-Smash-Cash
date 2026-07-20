@@ -1,404 +1,235 @@
-// ================================================================
-// FILE: supabase.js - Database Connection & Functions
-// ================================================================
-
-const SUPABASE_URL = 'https://qwcfcqkgbwzabsjvkrse.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3Y2ZjcWtnYnd6YWJzanZrcnNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1Mzk0NzIsImV4cCI6MjEwMDExNTQ3Mn0.mlC1lCjD8xhKnMP5YX4fxbehuwoH6KkfO6OtEgiGgnM';
-
-let supabaseClient = null;
-
-function getSupabase() {
-    if (!supabaseClient) {
-        if (typeof supabase !== 'undefined') {
-            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            console.log('✅ Supabase client initialized');
-        } else {
-            console.warn('⚠️ Supabase library not loaded yet, will retry...');
-            setTimeout(() => {
-                if (typeof supabase !== 'undefined') {
-                    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                    console.log('✅ Supabase client initialized (delayed)');
-                }
-            }, 200);
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Login - Block Smash Cash</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="supabase.js"></script>
+    <style>
+        /* All styles same as before, no change */
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+        html, body { height:100%; overflow:hidden; background:#0a0a1a; font-family:'Segoe UI',system-ui,Arial,sans-serif; color:#fff; }
+        #app {
+            max-width:420px; width:100%; height:100dvh; max-height:100dvh; margin:0 auto; background:#12122a;
+            border-radius:0; padding:24px 20px 16px; border:1px solid #2a2a5a; box-shadow:0 20px 60px rgba(0,0,0,0.8);
+            display:flex; flex-direction:column; justify-content:center; align-items:center; overflow:hidden;
         }
-    }
-    return supabaseClient;
-}
+        @media (min-width:421px) { #app { border-radius:24px; height:90vh; max-height:740px; margin-top:20px; } }
+        .login-box { width:100%; max-width:340px; text-align:center; }
+        .login-box .logo { font-size:64px; margin-bottom:4px; }
+        .login-box h1 { font-size:28px; font-weight:800; color:#00ddff; text-shadow:0 0 30px rgba(0,221,255,0.25); letter-spacing:1px; }
+        .login-box .tagline { color:#ffd700; font-size:14px; font-weight:600; letter-spacing:2px; margin-bottom:20px; }
+        .login-box .input-group { margin-bottom:12px; text-align:left; }
+        .login-box .input-group label { display:block; font-size:12px; color:#8888bb; margin-bottom:4px; font-weight:600; text-transform:uppercase; letter-spacing:0.5px; }
+        .login-box .input-group input { width:100%; padding:14px 16px; border-radius:14px; border:2px solid #2a2a5a; background:#0a0a1a; color:#fff; font-size:18px; outline:none; transition:border 0.3s; text-align:center; }
+        .login-box .input-group input:focus { border-color:#00ddff; }
+        .login-box .ref-display { background:#1a2a3a; border:1px solid #2a5a7a; border-radius:12px; padding:10px 14px; margin-bottom:16px; text-align:center; font-size:13px; color:#88ccff; word-break:break-all; }
+        .login-box .ref-display .label { color:#8888bb; font-size:11px; display:block; margin-bottom:2px; }
+        .login-box .login-btn { width:100%; padding:16px; border:none; border-radius:16px; font-size:20px; font-weight:700; background:linear-gradient(135deg,#00ddff,#0088ff); color:#fff; cursor:pointer; box-shadow:0 8px 35px rgba(0,136,255,0.35); transition:transform 0.15s; margin-top:6px; }
+        .login-box .login-btn:active { transform:scale(0.96); }
+        .login-box .login-btn:disabled { opacity:0.5; }
+        .login-box .warning { font-size:12px; color:#ff6644; background:#2a1a1a; padding:10px 14px; border-radius:10px; border-left:3px solid #ff6644; margin-top:12px; text-align:left; }
+        .login-box .error-msg { color:#ff6644; font-size:13px; margin-top:8px; min-height:20px; }
+        .login-box .success-msg { color:#66ff88; font-size:13px; margin-top:8px; min-height:20px; }
+        .login-box .footer-text { font-size:11px; color:#555588; margin-top:16px; }
+        .login-box .loading { display:none; font-size:14px; color:#8888bb; margin-top:8px; }
+        .login-box .loading.show { display:block; }
+        .login-box .hint { font-size:11px; color:#8888bb; margin-top:4px; text-align:left; }
+        .login-box .detailed-error { font-size:12px; color:#ffaa44; background:#1a1a2a; padding:8px; border-radius:6px; margin-top:6px; word-break:break-word; border:1px solid #ffaa44; display:none; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="login-box">
+        <div class="logo">💵</div>
+        <h1>BLOCK SMASH CASH</h1>
+        <div class="tagline">💰 Play · Earn · Win</div>
 
-// ================================================================
-// USER FUNCTIONS
-// ================================================================
+        <div class="input-group">
+            <label>👤 Choose a Username</label>
+            <input type="text" id="usernameInput" placeholder="e.g. KingKhan007" maxlength="20" autocomplete="off" />
+            <div class="hint">🔹 8–20 characters · Only letters (A-Z) and numbers (0-9)</div>
+        </div>
 
-async function getUser(username) {
-    const client = getSupabase();
-    if (!client) return null;
-    // ✅ FIX: Case-insensitive search using ilike
-    // Normalize for consistency (lowercase)
-    const normalized = username.trim().toLowerCase();
-    const { data, error } = await client
-        .from('users')
-        .select('*')
-        .ilike('username', normalized)  // ilike is case-insensitive
-        .maybeSingle();  // returns null if no match, instead of error
-    if (error) {
-        console.error('Error fetching user:', error);
-        return null;
-    }
-    return data;
-}
+        <div class="ref-display" id="refDisplay" style="display:none;">
+            <span class="label">🔗 Referred by</span>
+            <span id="refCodeDisplay">—</span>
+        </div>
 
-async function createUser(username, userId, referredBy) {
-    const client = getSupabase();
-    if (!client) return null;
-    // Always store username in lowercase
-    const normalized = username.trim().toLowerCase();
-    const { data, error } = await client
-        .from('users')
-        .insert([{
-            username: normalized,
-            user_id: userId,
-            referred_by: referredBy || null,
-            total_points: 0,
-            total_games: 0,
-            total_wins: 0,
-            balance: 0,
-            available_balance: 0,
-            joined: new Date().toISOString()
-        }])
-        .select()
-        .single();
-    if (error) {
-        console.error('Error creating user:', error);
-        return null;
-    }
-    return data;
-}
+        <button class="login-btn" id="loginBtn">▶ PLAY NOW</button>
 
-// باقی تمام فنکشنز ویسے ہی ہیں (کوئی تبدیلی نہیں)
-async function updateUserStats(username, points, games, wins) {
-    const client = getSupabase();
-    if (!client) return;
-    const { error } = await client
-        .from('users')
-        .update({ total_points: points, total_games: games, total_wins: wins })
-        .eq('username', username);
-    if (error) console.error('Error updating stats:', error);
-}
+        <div id="statusMsg" class="error-msg"></div>
+        <div id="loadingMsg" class="loading">⏳ Connecting...</div>
+        <div id="detailedError" class="detailed-error"></div>
 
-async function updateUserBalance(username, balance, availableBalance) {
-    const client = getSupabase();
-    if (!client) return;
-    const { error } = await client
-        .from('users')
-        .update({ balance: balance, available_balance: availableBalance })
-        .eq('username', username);
-    if (error) console.error('Error updating balance:', error);
-}
+        <div class="warning">
+            ⚠️ Username can only be set ONCE.<br>
+            If you forget it, your account is lost forever.
+        </div>
 
-async function getAllUsers() {
-    const client = getSupabase();
-    if (!client) return [];
-    const { data, error } = await client
-        .from('users')
-        .select('*')
-        .order('total_points', { ascending: false });
-    if (error) {
-        console.error('Error fetching users:', error);
-        return [];
-    }
-    return data;
-}
+        <div class="footer-text">🔒 No password required · Just your unique username</div>
+    </div>
+</div>
 
-async function deleteUser(username) {
-    const client = getSupabase();
-    if (!client) return false;
-    const { error } = await client
-        .from('users')
-        .delete()
-        .eq('username', username);
-    if (error) {
-        console.error('Error deleting user:', error);
-        return false;
-    }
-    return true;
-}
+<script>
+    (function() {
+        'use strict';
 
-// ================================================================
-// REFERRAL FUNCTIONS
-// ================================================================
-async function getReferrals(referrer) {
-    const client = getSupabase();
-    if (!client) return [];
-    const { data, error } = await client
-        .from('referrals')
-        .select('*')
-        .eq('referrer', referrer);
-    if (error) {
-        console.error('Error fetching referrals:', error);
-        return [];
-    }
-    return data;
-}
+        const usernameInput = document.getElementById('usernameInput');
+        const loginBtn = document.getElementById('loginBtn');
+        const statusMsg = document.getElementById('statusMsg');
+        const loadingMsg = document.getElementById('loadingMsg');
+        const detailedError = document.getElementById('detailedError');
+        const refDisplay = document.getElementById('refDisplay');
+        const refCodeDisplay = document.getElementById('refCodeDisplay');
 
-async function addReferral(referrer, referee) {
-    const client = getSupabase();
-    if (!client) return;
-    const { error } = await client
-        .from('referrals')
-        .insert([{ referrer, referee, active: false, date: new Date().toISOString() }]);
-    if (error) console.error('Error adding referral:', error);
-}
+        const BASE_URL = 'https://block-smash-cash.vercel.app';
 
-async function activateReferral(referee) {
-    const client = getSupabase();
-    if (!client) return;
-    const { error } = await client
-        .from('referrals')
-        .update({ active: true })
-        .eq('referee', referee);
-    if (error) console.error('Error activating referral:', error);
-}
+        function getReferralFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('ref') || '';
+        }
 
-async function getAllReferrals() {
-    const client = getSupabase();
-    if (!client) return [];
-    const { data, error } = await client
-        .from('referrals')
-        .select('*');
-    if (error) {
-        console.error('Error fetching all referrals:', error);
-        return [];
-    }
-    return data;
-}
+        const refCode = getReferralFromURL();
 
-// ================================================================
-// WITHDRAWAL FUNCTIONS
-// ================================================================
-async function getWithdrawals(username) {
-    const client = getSupabase();
-    if (!client) return [];
-    const { data, error } = await client
-        .from('withdrawals')
-        .select('*')
-        .eq('username', username)
-        .order('date', { ascending: false });
-    if (error) {
-        console.error('Error fetching withdrawals:', error);
-        return [];
-    }
-    return data;
-}
+        async function checkAlreadyLoggedIn() {
+            const username = localStorage.getItem('bs_username');
+            if (username) {
+                const user = await window.getUser(username);
+                if (user) {
+                    window.location.href = BASE_URL + '/';
+                    return true;
+                } else {
+                    localStorage.removeItem('bs_username');
+                }
+            }
+            return false;
+        }
 
-async function createWithdrawal(txn, username, account, amount) {
-    const client = getSupabase();
-    if (!client) return false;
-    const { error } = await client
-        .from('withdrawals')
-        .insert([{ txn, username, account, amount, status: 'pending', date: new Date().toISOString() }]);
-    if (error) {
-        console.error('Error creating withdrawal:', error);
-        return false;
-    }
-    return true;
-}
+        if (refCode) {
+            refDisplay.style.display = 'block';
+            refCodeDisplay.textContent = refCode;
+        }
 
-async function updateWithdrawalStatus(txn, status, txnId) {
-    const client = getSupabase();
-    if (!client) return false;
-    const updateData = { status };
-    if (txnId) updateData.txn_id = txnId;
-    const { error } = await client
-        .from('withdrawals')
-        .update(updateData)
-        .eq('txn', txn);
-    if (error) {
-        console.error('Error updating withdrawal:', error);
-        return false;
-    }
-    return true;
-}
+        async function handleLogin() {
+            const username = usernameInput.value.trim();
 
-async function getPendingWithdrawals() {
-    const client = getSupabase();
-    if (!client) return [];
-    const { data, error } = await client
-        .from('withdrawals')
-        .select('*')
-        .eq('status', 'pending')
-        .order('amount', { ascending: false });
-    if (error) {
-        console.error('Error fetching pending withdrawals:', error);
-        return [];
-    }
-    return data;
-}
+            // Validation
+            if (!username) {
+                statusMsg.textContent = '❌ Please enter a username.';
+                statusMsg.className = 'error-msg';
+                detailedError.style.display = 'none';
+                return;
+            }
+            if (username.length < 8) {
+                statusMsg.textContent = '❌ Username must be at least 8 characters.';
+                statusMsg.className = 'error-msg';
+                detailedError.style.display = 'none';
+                return;
+            }
+            if (username.length > 20) {
+                statusMsg.textContent = '❌ Username too long (max 20 characters).';
+                statusMsg.className = 'error-msg';
+                detailedError.style.display = 'none';
+                return;
+            }
+            if (!/^[a-zA-Z0-9]+$/.test(username)) {
+                statusMsg.textContent = '❌ Only letters and numbers allowed (no spaces or symbols).';
+                statusMsg.className = 'error-msg';
+                detailedError.style.display = 'none';
+                return;
+            }
 
-async function getAllWithdrawals() {
-    const client = getSupabase();
-    if (!client) return [];
-    const { data, error } = await client
-        .from('withdrawals')
-        .select('*')
-        .order('date', { ascending: false });
-    if (error) {
-        console.error('Error fetching withdrawals:', error);
-        return [];
-    }
-    return data;
-}
+            loginBtn.disabled = true;
+            loadingMsg.classList.add('show');
+            statusMsg.textContent = '';
+            detailedError.style.display = 'none';
+            detailedError.textContent = '';
 
-// ================================================================
-// SETTINGS FUNCTIONS
-// ================================================================
-async function getSetting(key) {
-    const client = getSupabase();
-    if (!client) return null;
-    const { data, error } = await client
-        .from('settings')
-        .select('value')
-        .eq('key', key)
-        .single();
-    if (error) return null;
-    return data ? data.value : null;
-}
+            try {
+                // Check if user exists
+                const existingUser = await window.getUser(username);
+                if (existingUser) {
+                    localStorage.setItem('bs_username', existingUser.username);
+                    statusMsg.textContent = '✅ Welcome back, ' + existingUser.username + '!';
+                    statusMsg.className = 'success-msg';
+                    setTimeout(() => {
+                        window.location.href = BASE_URL + '/';
+                    }, 500);
+                    return;
+                }
 
-async function setSetting(key, value) {
-    const client = getSupabase();
-    if (!client) return false;
-    const { error } = await client
-        .from('settings')
-        .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
-    if (error) {
-        console.error('Error setting setting:', error);
-        return false;
-    }
-    return true;
-}
+                // Create new user
+                const userId = 'BSC' + String(Date.now()).slice(-6) + String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+                const result = await window.createUser(username, userId, refCode || null);
 
-async function getPrizePool() {
-    const val = await getSetting('current_pool');
-    return val ? parseFloat(val) : 45230;
-}
+                if (!result.success) {
+                    // Show the actual error from Supabase
+                    let errorMsg = result.error || 'Unknown error.';
+                    // اگر error میں duplicate key کا ذکر ہو تو صارف دوستانہ پیغام
+                    if (errorMsg.toLowerCase().includes('duplicate') || errorMsg.toLowerCase().includes('unique')) {
+                        errorMsg = 'This username is already taken. Please choose another.';
+                    }
+                    statusMsg.textContent = '❌ Failed to create account: ' + errorMsg;
+                    statusMsg.className = 'error-msg';
+                    // تفصیلی خرابی نیچے دکھائیں
+                    detailedError.textContent = '🔍 Technical details: ' + result.error;
+                    detailedError.style.display = 'block';
+                    loginBtn.disabled = false;
+                    loadingMsg.classList.remove('show');
+                    return;
+                }
 
-async function updatePrizePool(amount) {
-    return await setSetting('current_pool', String(amount));
-}
+                // Success
+                if (refCode) {
+                    const referrals = await window.getAllReferrals() || [];
+                    const already = referrals.find(r => r.referee === username);
+                    if (!already) {
+                        await window.addReferral(refCode, username);
+                    }
+                }
 
-// ================================================================
-// ADMIN PASSWORD FUNCTIONS
-// ================================================================
-async function getAdminPassword() {
-    return await getSetting('admin_password') || '';
-}
+                localStorage.setItem('bs_username', username);
+                statusMsg.textContent = '✅ Account created! Welcome, ' + username + '!';
+                statusMsg.className = 'success-msg';
+                setTimeout(() => {
+                    window.location.href = BASE_URL + '/';
+                }, 500);
 
-async function setAdminPassword(password) {
-    return await setSetting('admin_password', password);
-}
+            } catch (error) {
+                console.error('Login error:', error);
+                statusMsg.textContent = '❌ An unexpected error occurred. Please try again.';
+                statusMsg.className = 'error-msg';
+                detailedError.textContent = '🔍 Error: ' + (error.message || error);
+                detailedError.style.display = 'block';
+                loginBtn.disabled = false;
+                loadingMsg.classList.remove('show');
+            }
+        }
 
-async function changeAdminPassword(currentPassword, newPassword) {
-    const current = await getAdminPassword();
-    if (current && current.trim() !== currentPassword.trim()) {
-        return { success: false, error: 'Current password is incorrect.' };
-    }
-    const success = await setAdminPassword(newPassword);
-    if (success) return { success: true, error: null };
-    return { success: false, error: 'Failed to update password.' };
-}
+        loginBtn.addEventListener('click', handleLogin);
 
-async function getSecurityQuestion() {
-    return await getSetting('security_question') || 'What is your favorite color?';
-}
+        usernameInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleLogin();
+            }
+        });
 
-async function getSecurityAnswer() {
-    return await getSetting('security_answer') || '';
-}
+        usernameInput.focus();
 
-async function setSecurityQuestion(question, answer) {
-    await setSetting('security_question', question);
-    await setSetting('security_answer', answer.toLowerCase().trim());
-}
+        checkAlreadyLoggedIn();
 
-async function resetAdminPassword(securityAnswer, newPassword) {
-    const storedAnswer = await getSecurityAnswer();
-    if (!storedAnswer) {
-        return { success: false, error: 'Security question not set. Please contact support.' };
-    }
-    if (securityAnswer.toLowerCase().trim() !== storedAnswer) {
-        return { success: false, error: 'Incorrect security answer.' };
-    }
-    const success = await setAdminPassword(newPassword);
-    if (success) return { success: true, error: null };
-    return { success: false, error: 'Failed to reset password.' };
-}
-
-// ================================================================
-// AD SETTINGS FUNCTIONS
-// ================================================================
-async function getAdSetting(key) {
-    return await getSetting(key) || '';
-}
-
-async function updateAdSetting(key, value) {
-    return await setSetting(key, value);
-}
-
-// ================================================================
-// BANNER FUNCTIONS
-// ================================================================
-async function getHomeBanner() {
-    return await getSetting('home_banner_code') || '';
-}
-
-async function setHomeBanner(code) {
-    return await setSetting('home_banner_code', code);
-}
-
-// ================================================================
-// BOT FUNCTIONS
-// ================================================================
-async function getBotEnabled() {
-    const val = await getSetting('bot_enabled');
-    return val === 'true';
-}
-
-async function setBotEnabled(enabled) {
-    return await setSetting('bot_enabled', enabled ? 'true' : 'false');
-}
-
-// ================================================================
-// EXPORT FUNCTIONS TO GLOBAL SCOPE
-// ================================================================
-window.getUser = getUser;
-window.createUser = createUser;
-window.updateUserStats = updateUserStats;
-window.updateUserBalance = updateUserBalance;
-window.getAllUsers = getAllUsers;
-window.deleteUser = deleteUser;
-window.getReferrals = getReferrals;
-window.addReferral = addReferral;
-window.activateReferral = activateReferral;
-window.getAllReferrals = getAllReferrals;
-window.getWithdrawals = getWithdrawals;
-window.createWithdrawal = createWithdrawal;
-window.updateWithdrawalStatus = updateWithdrawalStatus;
-window.getPendingWithdrawals = getPendingWithdrawals;
-window.getAllWithdrawals = getAllWithdrawals;
-window.getPrizePool = getPrizePool;
-window.updatePrizePool = updatePrizePool;
-window.getAdminPassword = getAdminPassword;
-window.setAdminPassword = setAdminPassword;
-window.changeAdminPassword = changeAdminPassword;
-window.resetAdminPassword = resetAdminPassword;
-window.getSecurityQuestion = getSecurityQuestion;
-window.setSecurityQuestion = setSecurityQuestion;
-window.getAdSetting = getAdSetting;
-window.updateAdSetting = updateAdSetting;
-window.getHomeBanner = getHomeBanner;
-window.setHomeBanner = setHomeBanner;
-window.getBotEnabled = getBotEnabled;
-window.setBotEnabled = setBotEnabled;
-window.getSetting = getSetting;
-window.setSetting = setSetting;
-
-console.log('✅ Supabase.js loaded successfully (FIXED with ilike)!');
+        if (refCode) {
+            statusMsg.textContent = '🔗 You were referred by ' + refCode + '!';
+            statusMsg.className = 'success-msg';
+            setTimeout(() => {
+                statusMsg.textContent = '';
+                statusMsg.className = 'error-msg';
+            }, 4000);
+        }
+    })();
+</script>
+</body>
+</html>
