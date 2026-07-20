@@ -52,10 +52,21 @@
         .content-area::-webkit-scrollbar { width: 3px; }
         .content-area::-webkit-scrollbar-thumb { background: #2a2a5a; border-radius: 10px; }
 
-        .ref-header { text-align: center; padding: 6px 0 4px; flex-shrink: 0; }
+        .ref-header {
+            text-align: center;
+            padding: 6px 0 4px;
+            flex-shrink: 0;
+        }
         .ref-header .icon { font-size: 48px; }
-        .ref-header h2 { font-size: 22px; color: #00ddff; font-weight: 700; }
-        .ref-header p { color: #8888bb; font-size: 13px; }
+        .ref-header h2 {
+            font-size: 22px;
+            color: #00ddff;
+            font-weight: 700;
+        }
+        .ref-header p {
+            color: #8888bb;
+            font-size: 13px;
+        }
 
         .ref-link-box {
             background: #1a1a3a;
@@ -118,8 +129,16 @@
             text-align: center;
             border: 1px solid #2a2a5a;
         }
-        .ref-stats .s .num { font-size: 20px; font-weight: 700; color: #ffd700; }
-        .ref-stats .s .lbl { font-size: 9px; color: #8888bb; text-transform: uppercase; }
+        .ref-stats .s .num {
+            font-size: 20px;
+            font-weight: 700;
+            color: #ffd700;
+        }
+        .ref-stats .s .lbl {
+            font-size: 9px;
+            color: #8888bb;
+            text-transform: uppercase;
+        }
 
         .ref-bonus-table {
             background: #1a1a3a;
@@ -128,7 +147,12 @@
             border: 1px solid #2a2a5a;
             flex-shrink: 0;
         }
-        .ref-bonus-table h3 { font-size: 14px; color: #ffd700; margin-bottom: 6px; text-align: center; }
+        .ref-bonus-table h3 {
+            font-size: 14px;
+            color: #ffd700;
+            margin-bottom: 6px;
+            text-align: center;
+        }
         .ref-bonus-table .row {
             display: flex;
             justify-content: space-between;
@@ -159,7 +183,11 @@
             max-height: 200px;
             overflow-y: auto;
         }
-        .ref-list h3 { font-size: 13px; color: #aaa; margin-bottom: 4px; }
+        .ref-list h3 {
+            font-size: 13px;
+            color: #aaa;
+            margin-bottom: 4px;
+        }
         .ref-list .entry {
             display: flex;
             justify-content: space-between;
@@ -267,6 +295,15 @@
     // ================================================================
     // REFERRAL PAGE - LIVE DATA
     // ================================================================
+
+    // --- CHECK IF USER IS LOGGED IN ---
+    (function() {
+        const username = localStorage.getItem('bs_username');
+        if (!username) {
+            window.location.href = 'login.html';
+            return;
+        }
+    })();
 
     function getUsers() {
         try { return JSON.parse(localStorage.getItem('bs_users')) || []; } catch(e) { return []; }
