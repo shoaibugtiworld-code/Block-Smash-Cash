@@ -214,7 +214,7 @@
         <div class="phase-box">
             <div class="phase-title" id="phaseTitle">🏆 Phase 1 – 100 Winners</div>
             <div class="phase-desc" id="phaseDesc">Next: 150 Winners</div>
-            <div class="phase-date" id="phaseDate">📅 Next Withdrawal: 30 July 2026</div>
+            <div class="phase-date" id="phaseDate">📅 Next Withdrawal: 25 July 2026</div>
             <div class="phase-arrow" id="phaseArrow">➡️ 100 ➜ 150 ➜ 200 ➜ 250 ➜ 500</div>
         </div>
 
@@ -233,12 +233,11 @@
         <a href="profile.html">👤<span>Profile</span></a>
         <a href="referral.html">🔗<span>Referral</span></a>
         <a href="admin.html" id="adminNavLink" style="display:none;">⚙️<span>Admin</span></a>
-        <a href="ads.html">📢<span>Ads</span></a>
     </div>
 </div>
 <script>
     // ================================================================
-    // INDEX.HTML - HOME PAGE WITH AD INTEGRATION
+    // INDEX.HTML - HOME PAGE WITH LOGIN CHECK
     // ================================================================
 
     // --- CHECK IF USER IS LOGGED IN ---
@@ -291,10 +290,12 @@
         }
         return arrow;
     }
+
+    // --- UPDATED: Withdrawal date changed to 25th ---
     function getNextWithdrawalDate() {
         const d = new Date();
-        let month = d.getMonth(), year = d.getFullYear(), day = 30;
-        if (d.getDate() > 30) { month++; if (month > 11) { month = 0; year++; } }
+        let month = d.getMonth(), year = d.getFullYear(), day = 25;
+        if (d.getDate() > 25) { month++; if (month > 11) { month = 0; year++; } }
         const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
         return day + ' ' + months[month] + ' ' + year;
     }
@@ -315,13 +316,11 @@
 
     // ===== PLAY BUTTON WITH AD =====
     document.getElementById('homePlayBtn').addEventListener('click', function() {
-        // Show ad from ads.js
         if (typeof showPlayButtonAd === 'function') {
             showPlayButtonAd(function() {
                 window.location.href = 'game.html';
             });
         } else {
-            // Fallback: just go to game
             window.location.href = 'game.html';
         }
     });
