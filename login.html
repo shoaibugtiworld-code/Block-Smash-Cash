@@ -1,13 +1,12 @@
-<!-- ============================================================ -->
-<!-- FILE: login.html (COMPLETE - FIXED SCRIPT ORDER)            -->
-<!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Login - Block Smash Cash</title>
+    <!-- پہلے Supabase لائبریری -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <!-- پھر supabase.js -->
     <script src="supabase.js"></script>
     <style>
         * {
@@ -192,7 +191,6 @@
             <input type="text" id="usernameInput" placeholder="e.g. KingKhan" maxlength="20" autocomplete="off" />
         </div>
 
-        <!-- Referral Display (auto-filled from URL) -->
         <div class="ref-display" id="refDisplay" style="display:none;">
             <span class="label">🔗 Referred by</span>
             <span id="refCodeDisplay">—</span>
@@ -297,7 +295,6 @@
                 }
 
                 const userId = 'BSC' + String(Date.now()).slice(-6) + String(Math.floor(Math.random() * 1000)).padStart(3, '0');
-
                 const created = await window.createUser(username, userId, refCode || null);
 
                 if (!created) {
@@ -343,6 +340,7 @@
 
         usernameInput.focus();
 
+        // Check if already logged in
         checkAlreadyLoggedIn();
 
         if (refCode) {
