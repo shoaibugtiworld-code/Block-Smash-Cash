@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Block Smash Cash - Leaderboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="supabase.js"></script>
     <style>
         * {
             margin: 0;
@@ -198,7 +200,7 @@
             <span>🏅 <span id="lbWinners">0</span></span>
         </div>
         <div class="lb-list" id="lbList">
-            <div style="text-align:center;padding:30px;color:#888;">No players yet.</div>
+            <div style="text-align:center;padding:30px;color:#888;">Loading players...</div>
         </div>
         <div class="lb-footer">
             <span id="lbYourRank">Your Rank: #—</span>
@@ -213,26 +215,48 @@
         <a href="admin.html" id="adminNavLink" style="display:none;">⚙️<span>Admin</span></a>
     </div>
 </div>
+
 <script>
     // ================================================================
-    // LEADERBOARD - TIERED PRIZE DISTRIBUTION + REFERRAL BONUS
+    // LEADERBOARD - WITH SUPABASE + TIERED PRIZE SYSTEM
     // ================================================================
 
-    function getUsers() {
-        try { return JSON.parse(localStorage.getItem('bs_users')) || []; } catch(e) { return []; }
-    }
-    function getPool() {
-        return parseFloat(localStorage.getItem('bs_current_pool')) || 45230;
-    }
-    function getCurrentUser() {
-        const name = localStorage.getItem('bs_username');
-        if (!name) return null;
-        return getUsers().find(u => u.username === name) || null;
-    }
-    function getReferrals() {
-        try { return JSON.parse(localStorage.getItem('bs_referrals')) || []; } catch(e) { return []; }
+    // --- BOT VERIFICATION CHECK (every 3 hours) ---
+    function checkBotVerification() {
+        const verified = localStorage.getItem('bs_bot_verified') === 'true';
+        const timestamp = parseInt(localStorage.getItem('bs_bot_timestamp') || '0');
+        const threeHours = 3 * 60 * 60 * 1000;
+
+        if (!verified || (Date.now() - timestamp) >= threeHours) {
+            const currentPage = 'leaderboard.html';
+            window.location.href = 'bot.html?return=' + encodeURIComponent(currentPage);
+        }
     }
 
+    checkBotVerification();
+    setInterval(checkBotVerification, 5 * 60 * 1000);
+
+    // --- CHECK LOGIN ---
+    (async function() {
+        const username = localStorage.getItem('bs_username');
+        if (!username) {
+            window.location.href = 'login.html';
+            return;
+        }
+
+        const user = await window.getUser(username);
+        if (!user) {
+            localStorage.removeItem('bs_username');
+            window.location.href = 'login.html';
+            return;
+        }
+
+        renderLeaderboard();
+    })();
+
+    // ================================================================
+    // TIERED PRIZE DISTRIBUTION
+    // ================================================================
     function getPrizeByRank(rank, pool) {
         if (rank === 1) return pool * 0.10;
         else if (rank >= 2 && rank <= 5) return (pool * 0.16) / 4;
@@ -243,6 +267,9 @@
         else return 0;
     }
 
+    // ================================================================
+    // REFERRAL BONUS
+    // ================================================================
     function getBonusPercent(activeCount) {
         if (activeCount >= 1000) return 100;
         else if (activeCount >= 500) return 75;
@@ -255,97 +282,111 @@
         else return 0;
     }
 
-    function getFinalScore(user) {
-        const baseScore = user.totalPoints || 0;
-        const allRefs = getReferrals();
-        const myRefs = allRefs.filter(r => r.referrer === user.username);
-        const active = myRefs.filter(r => r.active === true).length;
-        const bonus = getBonusPercent(active);
-        return baseScore + Math.floor(baseScore * (bonus / 100));
-    }
+    // ================================================================
+    // RENDER LEADERBOARD
+    // ================================================================
+    async function renderLeaderboard() {
+        try {
+            // Get users from Supabase
+            const users = await window.getAllUsers();
+            const pool = await window.getPrizePool();
+            const currentUser = localStorage.getItem('bs_username');
 
-    function renderLeaderboard() {
-        const users = getUsers();
-        const pool = getPool();
-        const allRefs = getReferrals();
+            // Get referrals for bonus calculation
+            let allReferrals = [];
+            try {
+                // We need to get all referrals, but since we don't have a function for all,
+                // we'll fetch per user or use a simpler approach
+                // For now, we'll use the existing data structure
+                allReferrals = JSON.parse(localStorage.getItem('bs_referrals')) || [];
+            } catch(e) { allReferrals = []; }
 
-        const usersWithBonus = users.map(u => {
-            const myRefs = allRefs.filter(r => r.referrer === u.username);
-            const active = myRefs.filter(r => r.active === true).length;
-            const bonus = getBonusPercent(active);
-            const finalScore = (u.totalPoints || 0) + Math.floor((u.totalPoints || 0) * (bonus / 100));
-            return { ...u, finalScore, bonus, activeRefs: active };
-        });
+            // Calculate final score with referral bonus
+            const usersWithBonus = users.map(u => {
+                const myRefs = allReferrals.filter(r => r.referrer === u.username);
+                const active = myRefs.filter(r => r.active === true).length;
+                const bonus = getBonusPercent(active);
+                const finalScore = (u.total_points || 0) + Math.floor((u.total_points || 0) * (bonus / 100));
+                return { ...u, finalScore, bonus, activeRefs: active };
+            });
 
-        const sorted = [...usersWithBonus].sort((a, b) => b.finalScore - a.finalScore);
-        const top = sorted.slice(0, 100);
-        const list = document.getElementById('lbList');
+            // Sort by final score descending
+            const sorted = [...usersWithBonus].sort((a, b) => b.finalScore - a.finalScore);
+            const top = sorted.slice(0, 100);
+            const list = document.getElementById('lbList');
 
-        document.getElementById('lbUsers').textContent = users.length;
-        document.getElementById('lbPool').textContent = '₨ ' + pool.toFixed(0);
-        document.getElementById('lbWinners').textContent = Math.min(users.length, 500);
-        document.getElementById('lbPhaseTag').textContent = 'Phase ' + (Math.floor(users.length / 100) + 1);
+            // Update stats
+            document.getElementById('lbUsers').textContent = users.length;
+            document.getElementById('lbPool').textContent = '₨ ' + pool.toFixed(0);
+            document.getElementById('lbWinners').textContent = Math.min(users.length, 500);
+            document.getElementById('lbPhaseTag').textContent = 'Phase ' + (Math.floor(users.length / 100) + 1);
 
-        if (top.length === 0) {
-            list.innerHTML = '<div style="text-align:center;padding:30px;color:#888;">No players yet.</div>';
-            document.getElementById('lbYourRank').textContent = 'Your Rank: #—';
-            return;
-        }
-
-        const current = getCurrentUser();
-        let userRank = -1;
-        let userPrize = 0;
-        let html = '';
-
-        top.forEach((u, i) => {
-            const rank = i + 1;
-            const isMe = current && u.username === current.username;
-            if (isMe) {
-                userRank = rank;
-                userPrize = getPrizeByRank(rank, pool);
+            if (top.length === 0) {
+                list.innerHTML = '<div style="text-align:center;padding:30px;color:#888;">No players yet. Be the first!</div>';
+                document.getElementById('lbYourRank').textContent = 'Your Rank: #—';
+                return;
             }
-            const displayName = u.username.length > 6 ? u.username.slice(0, 4) + '***' : u.username;
-            const prize = getPrizeByRank(rank, pool);
-            const bonusText = u.bonus > 0 ? `+${u.bonus}%` : '';
-            const refText = u.activeRefs > 0 ? `👥${u.activeRefs}` : '';
 
-            html += `
-                <div class="lb-entry${isMe ? ' me' : ''}">
-                    <span class="rank">#${rank}</span>
-                    <span class="name">
-                        ${displayName}
-                        ${refText ? `<span class="bonus-badge">${refText}</span>` : ''}
-                        ${bonusText ? `<span class="bonus-badge">${bonusText}</span>` : ''}
-                    </span>
-                    <span class="score">${u.finalScore.toLocaleString()}</span>
-                    <span class="amount">₨ ${prize.toFixed(0)}</span>
-                </div>
-            `;
-        });
+            let userRank = -1;
+            let userPrize = 0;
+            let html = '';
 
-        list.innerHTML = html;
+            top.forEach((u, i) => {
+                const rank = i + 1;
+                const isMe = currentUser && u.username === currentUser;
+                if (isMe) {
+                    userRank = rank;
+                    userPrize = getPrizeByRank(rank, pool);
+                }
+                const displayName = u.username.length > 6 ? u.username.slice(0, 4) + '***' : u.username;
+                const prize = getPrizeByRank(rank, pool);
+                const bonusText = u.bonus > 0 ? `+${u.bonus}%` : '';
+                const refText = u.activeRefs > 0 ? `👥${u.activeRefs}` : '';
 
-        if (current && userRank > 0) {
-            const prize = getPrizeByRank(userRank, pool);
-            const userData = usersWithBonus.find(u => u.username === current.username);
-            const bonusText = userData && userData.bonus > 0 ? ` (${userData.bonus}% bonus)` : '';
-            document.getElementById('lbYourRank').innerHTML =
-                '🏅 Your Rank: <span class="highlight rank-badge">#' + userRank + '</span>' +
-                ' | 💰 Prize: <span class="highlight">₨ ' + prize.toFixed(0) + '</span>' +
-                bonusText +
-                (userRank <= 100 ? ' 🎉' : ' · Keep pushing!');
-        } else if (current) {
-            document.getElementById('lbYourRank').textContent = 'Your Rank: #— · Keep playing!';
-        } else {
-            document.getElementById('lbYourRank').textContent = 'Login to see your rank.';
+                html += `
+                    <div class="lb-entry${isMe ? ' me' : ''}">
+                        <span class="rank">#${rank}</span>
+                        <span class="name">
+                            ${displayName}
+                            ${refText ? `<span class="bonus-badge">${refText}</span>` : ''}
+                            ${bonusText ? `<span class="bonus-badge">${bonusText}</span>` : ''}
+                        </span>
+                        <span class="score">${u.finalScore.toLocaleString()}</span>
+                        <span class="amount">₨ ${prize.toFixed(0)}</span>
+                    </div>
+                `;
+            });
+
+            list.innerHTML = html;
+
+            // Update footer with user's rank
+            if (currentUser && userRank > 0) {
+                const prize = getPrizeByRank(userRank, pool);
+                const userData = usersWithBonus.find(u => u.username === currentUser);
+                const bonusText = userData && userData.bonus > 0 ? ` (${userData.bonus}% bonus)` : '';
+                document.getElementById('lbYourRank').innerHTML =
+                    '🏅 Your Rank: <span class="highlight rank-badge">#' + userRank + '</span>' +
+                    ' | 💰 Prize: <span class="highlight">₨ ' + prize.toFixed(0) + '</span>' +
+                    bonusText +
+                    (userRank <= 100 ? ' 🎉 In Top 100!' : ' · Keep pushing!');
+            } else if (currentUser) {
+                document.getElementById('lbYourRank').textContent = 'Your Rank: #— · Keep playing!';
+            } else {
+                document.getElementById('lbYourRank').textContent = 'Login to see your rank.';
+            }
+
+        } catch (error) {
+            console.error('Error rendering leaderboard:', error);
+            document.getElementById('lbList').innerHTML = '<div style="text-align:center;padding:30px;color:#888;">Error loading leaderboard. Please try again.</div>';
         }
     }
 
+    // --- ADMIN LINK ---
     if (window.location.search.includes('admin=true')) {
         document.getElementById('adminNavLink').style.display = 'flex';
     }
 
-    renderLeaderboard();
+    // --- AUTO REFRESH ---
     setInterval(renderLeaderboard, 60000);
 </script>
 </body>
