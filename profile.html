@@ -5,9 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Block Smash Cash - Profile</title>
     <style>
-        /* === ALL STYLES SAME AS BEFORE === */
-        /* (previous CSS remains unchanged) */
-        /* Just adding modal styles for logout */
         * {
             margin: 0;
             padding: 0;
@@ -287,7 +284,7 @@
         <div class="balance-box" style="border-color: #ffd700;">
             <div class="label">💰 AVAILABLE BALANCE</div>
             <div class="amount" id="pAvailableBalance">₨ 0</div>
-            <div class="next-date" id="pNextDate">📅 Next withdrawal: 30 July 2026</div>
+            <div class="next-date" id="pNextDate">📅 Next withdrawal: 25 July 2026</div>
         </div>
 
         <div class="profile-actions">
@@ -328,23 +325,22 @@
     </div>
 </div>
 
-<!-- ===== LOGOUT CONFIRM MODAL (Custom - No Website Name) ===== -->
-<div class="modal-overlay hidden" id="logoutModal">
-    <div class="modal">
-        <h3>🚪 Logout</h3>
-        <p style="color:#aaa;text-align:center;margin-bottom:16px;font-size:15px;">Are you sure you want to logout?</p>
-        <div class="modal-actions">
-            <button class="submit" id="logoutConfirmBtn" style="background:#ff4444;color:#fff;">Yes, Logout</button>
-            <button class="cancel" id="logoutCancelBtn">Cancel</button>
-        </div>
-    </div>
-</div>
-
 <script>
     // ================================================================
     // PROFILE - CORRECT CURRENT EARNINGS (TIERED SYSTEM)
+    // Withdrawal date: 25th of each month
     // ================================================================
 
+    // --- CHECK IF USER IS LOGGED IN ---
+    (function() {
+        const username = localStorage.getItem('bs_username');
+        if (!username) {
+            window.location.href = 'login.html';
+            return;
+        }
+    })();
+
+    // --- TIERED PRIZE DISTRIBUTION ---
     function getPrizeByRank(rank, pool) {
         if (rank === 1) return pool * 0.10;
         else if (rank >= 2 && rank <= 5) return (pool * 0.16) / 4;
@@ -371,10 +367,12 @@
     }
     function saveUsers(users) { localStorage.setItem('bs_users', JSON.stringify(users)); }
     function saveWithdrawals(wds) { localStorage.setItem('bs_withdrawals', JSON.stringify(wds)); }
+
+    // --- UPDATED: Withdrawal date changed to 25th ---
     function getNextWithdrawalDate() {
         const d = new Date();
-        let month = d.getMonth(), year = d.getFullYear(), day = 30;
-        if (d.getDate() > 30) { month++; if (month > 11) { month = 0; year++; } }
+        let month = d.getMonth(), year = d.getFullYear(), day = 25;
+        if (d.getDate() > 25) { month++; if (month > 11) { month = 0; year++; } }
         const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
         return day + ' ' + months[month] + ' ' + year;
     }
@@ -515,27 +513,9 @@
         }
     });
 
-    // ===== LOGOUT (Custom Modal - No Website Name) =====
-    const logoutModal = document.getElementById('logoutModal');
-    const logoutConfirmBtn = document.getElementById('logoutConfirmBtn');
-    const logoutCancelBtn = document.getElementById('logoutCancelBtn');
-
+    // ===== LOGOUT - Redirect to logout.html =====
     document.getElementById('logoutBtn').addEventListener('click', function() {
-        logoutModal.classList.remove('hidden');
-    });
-
-    logoutCancelBtn.addEventListener('click', function() {
-        logoutModal.classList.add('hidden');
-    });
-
-    logoutModal.addEventListener('click', function(e) {
-        if (e.target === logoutModal) logoutModal.classList.add('hidden');
-    });
-
-    logoutConfirmBtn.addEventListener('click', function() {
-        logoutModal.classList.add('hidden');
-        localStorage.removeItem('bs_username');
-        window.location.href = 'index.html';
+        window.location.href = 'logout.html';
     });
 
     // ===== ADMIN NAV =====
