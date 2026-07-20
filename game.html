@@ -1,3 +1,6 @@
+<!-- ============================================================ -->
+<!-- FILE: game.html (COMPLETE - FIXED SCRIPT ORDER)             -->
+<!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -225,7 +228,6 @@
 </head>
 <body>
 <div id="app">
-    <!-- Game Header -->
     <div class="game-header">
         <div class="item"><div class="lbl">Score</div><div class="val score" id="gameScore">0</div></div>
         <div class="item"><div class="lbl">Rank</div><div class="val rank" id="gameRank">#—</div></div>
@@ -266,13 +268,10 @@
 <script>
     // ================================================================
     // GAME WITH SUPABASE INTEGRATION
-    // Vercel Clean URL | 30th July 2026
     // ================================================================
 
-    // --- Vercel Base URL ---
     const BASE_URL = 'https://block-smash-cash.vercel.app';
 
-    // --- BOT VERIFICATION CHECK (every 3 hours) ---
     function checkBotVerification() {
         const verified = localStorage.getItem('bs_bot_verified') === 'true';
         const timestamp = parseInt(localStorage.getItem('bs_bot_timestamp') || '0');
@@ -287,7 +286,6 @@
     checkBotVerification();
     setInterval(checkBotVerification, 5 * 60 * 1000);
 
-    // --- CHECK LOGIN ---
     (async function() {
         const username = localStorage.getItem('bs_username');
         if (!username) {
@@ -302,13 +300,8 @@
             return;
         }
 
-        // User is valid, start game
         initGame();
     })();
-
-    // ================================================================
-    // FULL GAME CODE + SUPABASE SAVE ON GAME OVER
-    // ================================================================
 
     (function() {
         'use strict';
@@ -361,7 +354,6 @@
             10: { color: '#ffffff', glow: '#ffffaa', dmg: 8, speed: 12, count: 8, spread: 30, name: 'Cosmic', delay: 70 }
         };
 
-        // --- AUDIO ---
         function initAudio() {
             if (!audioCtx) audioCtx = new(window.AudioContext || window.webkitAudioContext)();
         }
@@ -453,7 +445,6 @@
             if (vibeOn && navigator.vibrate) { try { navigator.vibrate(pattern); } catch (e) {} }
         }
 
-        // --- GAME CLASSES ---
         class MoneyNote {
             constructor(x, y, level) {
                 this.x = x; this.y = y; this.level = level;
@@ -497,7 +488,6 @@
             }
         }
 
-        // --- GAME FUNCTIONS ---
         function initGame() {
             grid = []; bullets = []; particles = []; gifts = []; coins = []; floatingTexts = [];
             currentScore = 0; gameOver = false; isPaused = true; playerX = 175;
@@ -680,7 +670,6 @@
             }
         }
 
-        // --- MAIN GAME UPDATE ---
         function updateGame() {
             if (gameOver || isPaused) return;
             const elapsed = (Date.now() - gameStartTime) / 1000;
@@ -698,7 +687,6 @@
             const speed = (0.30 + (currentScore / 9000)) * speedMultiplier;
             grid.forEach(b => b.y += Math.min(speed, 1.7));
 
-            // GIFTS
             for (let i = gifts.length - 1; i >= 0; i--) {
                 const g = gifts[i];
                 g.y += 1.6 + (g.type === 'mega' ? 1.0 : 0);
@@ -753,7 +741,6 @@
                 }
             }
 
-            // WEAPON TIMER
             if (weaponLevel > 1) {
                 weaponTimer--;
                 if (weaponTimer <= 0) {
@@ -766,7 +753,6 @@
                 }
             }
 
-            // COINS
             for (let i = coins.length - 1; i >= 0; i--) {
                 const c = coins[i];
                 c.x += c.vx; c.y += c.vy; c.vy += 0.02;
@@ -787,7 +773,6 @@
                 if (c.alpha <= 0 || c.life <= 0 || c.y > canvas.height + 20) { coins.splice(i, 1); }
             }
 
-            // FLOATING TEXTS
             for (let i = floatingTexts.length - 1; i >= 0; i--) {
                 const ft = floatingTexts[i];
                 ft.y += ft.vy; ft.alpha -= 0.025;
@@ -796,7 +781,6 @@
 
             shoot();
 
-            // BULLETS
             for (let i = bullets.length - 1; i >= 0; i--) {
                 bullets[i].y -= bullets[i].speed;
                 if (bullets[i].y < 0) { bullets.splice(i, 1); continue; }
@@ -891,9 +875,6 @@
             updateRank();
         }
 
-        // ================================================================
-        // GAME OVER - SAVE SCORE TO SUPABASE
-        // ================================================================
         async function saveScoreToSupabase(score) {
             const username = localStorage.getItem('bs_username');
             if (!username) return;
@@ -906,7 +887,6 @@
                 const currentGames = user.total_games || 0;
                 const currentWins = user.total_wins || 0;
 
-                // Check if this is a win (score > 100 threshold)
                 const isWin = score > 100;
 
                 const newPoints = currentPoints + score;
@@ -926,7 +906,6 @@
             }
         }
 
-        // --- SHOW GAME OVER ---
         function showGameOver() {
             overlay.classList.add('show');
             finalScore.textContent = currentScore;
@@ -934,30 +913,12 @@
             playPop(200, 0.5, 0.1);
             vibrate([80, 40, 80, 40, 150]);
 
-            // ===== SAVE SCORE TO SUPABASE =====
             saveScoreToSupabase(currentScore);
 
             if (nearMissCount > 5) {
                 goSub.textContent = 'So close! Keep going! 💪';
             } else {
                 goSub.textContent = 'Better luck next time!';
-            }
-
-            // ===== AD INTEGRATION =====
-            if (typeof shouldShowAdAfterGame === 'function') {
-                if (shouldShowAdAfterGame()) {
-                    restartBtn.style.display = 'none';
-                    rewardBtn.style.display = 'none';
-                    if (typeof showReplayAd === 'function') {
-                        showReplayAd(function() {
-                            restartBtn.style.display = 'block';
-                            rewardBtn.style.display = 'block';
-                            if (typeof resetGameCounter === 'function') {
-                                resetGameCounter();
-                            }
-                        });
-                    }
-                }
             }
         }
 
@@ -980,42 +941,22 @@
             }
         });
 
-        // --- REWARD AD ---
         rewardBtn.addEventListener('click', function() {
-            if (typeof handleRewardAd === 'function') {
-                handleRewardAd(currentScore, function(newScore, multiplier) {
-                    currentScore = newScore;
-                    document.getElementById('gameScore').textContent = currentScore;
-                    finalScore.textContent = currentScore;
-                    if (currentScore > highScore) {
-                        highScore = currentScore;
-                        localStorage.setItem('bs_highScore', highScore);
-                        document.getElementById('gameHigh').textContent = highScore;
-                        finalHigh.textContent = highScore;
-                    }
-                    showNotification('🎉 ' + multiplier + 'x Bonus Applied!', 'New Score: ' + currentScore);
-                    rewardBtn.style.display = 'none';
-                    // Save the updated score to Supabase
-                    saveScoreToSupabase(currentScore);
-                });
-            } else {
-                const multiplier = Math.random() < 0.3 ? 4 : 2;
-                currentScore = currentScore * multiplier;
-                document.getElementById('gameScore').textContent = currentScore;
-                finalScore.textContent = currentScore;
-                if (currentScore > highScore) {
-                    highScore = currentScore;
-                    localStorage.setItem('bs_highScore', highScore);
-                    document.getElementById('gameHigh').textContent = highScore;
-                    finalHigh.textContent = highScore;
-                }
-                showNotification('🎉 ' + multiplier + 'x Bonus Applied!', 'New Score: ' + currentScore);
-                rewardBtn.style.display = 'none';
-                saveScoreToSupabase(currentScore);
+            const multiplier = Math.random() < 0.3 ? 4 : 2;
+            currentScore = currentScore * multiplier;
+            document.getElementById('gameScore').textContent = currentScore;
+            finalScore.textContent = currentScore;
+            if (currentScore > highScore) {
+                highScore = currentScore;
+                localStorage.setItem('bs_highScore', highScore);
+                document.getElementById('gameHigh').textContent = highScore;
+                finalHigh.textContent = highScore;
             }
+            showNotification('🎉 ' + multiplier + 'x Bonus Applied!', 'New Score: ' + currentScore);
+            rewardBtn.style.display = 'none';
+            saveScoreToSupabase(currentScore);
         });
 
-        // --- DRAW ---
         function drawGame() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = '#0b0626';
@@ -1264,11 +1205,9 @@
             document.getElementById('adminNavLink').style.display = 'flex';
         }
 
-        // --- START GAME ---
         initGame();
         gameLoop();
 
-        // Save high score periodically
         setInterval(() => {
             if (currentScore > highScore) {
                 highScore = currentScore;
