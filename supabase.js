@@ -10,13 +10,11 @@ let supabaseClient = null;
 
 function getSupabase() {
     if (!supabaseClient) {
-        // Check if supabase library is loaded
         if (typeof supabase !== 'undefined') {
             supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             console.log('✅ Supabase client initialized');
         } else {
             console.warn('⚠️ Supabase library not loaded yet, will retry...');
-            // Try again after 200ms
             setTimeout(() => {
                 if (typeof supabase !== 'undefined') {
                     supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
@@ -35,10 +33,12 @@ function getSupabase() {
 async function getUser(username) {
     const client = getSupabase();
     if (!client) return null;
+    // ✅ FIX 1: Username کو normalize کریں (چھوٹے حروف + trim)
+    const normalized = username.trim().toLowerCase();
     const { data, error } = await client
         .from('users')
         .select('*')
-        .eq('username', username)
+        .eq('username', normalized)
         .single();
     if (error && error.code !== 'PGRST116') {
         console.error('Error fetching user:', error);
@@ -50,10 +50,12 @@ async function getUser(username) {
 async function createUser(username, userId, referredBy) {
     const client = getSupabase();
     if (!client) return null;
+    // ✅ FIX 2: نیا صارف بناتے وقت بھی Username کو normalize کریں
+    const normalized = username.trim().toLowerCase();
     const { data, error } = await client
         .from('users')
         .insert([{
-            username: username,
+            username: normalized,
             user_id: userId,
             referred_by: referredBy || null,
             total_points: 0,
@@ -326,9 +328,10 @@ async function setAdminPassword(password) {
     return await setSetting('admin_password', password);
 }
 
+// ✅ FIX 3: changeAdminPassword میں trim() کا استعمال
 async function changeAdminPassword(currentPassword, newPassword) {
     const current = await getAdminPassword();
-    if (current && current !== currentPassword) {
+    if (current && current.trim() !== currentPassword.trim()) {
         return { success: false, error: 'Current password is incorrect.' };
     }
     const success = await setAdminPassword(newPassword);
@@ -439,4 +442,4 @@ window.setBotEnabled = setBotEnabled;
 window.getSetting = getSetting;
 window.setSetting = setSetting;
 
-console.log('✅ Supabase.js loaded successfully!');
+console.log('✅ Supabase.js loaded successfully (FIXED VERSION)!');
