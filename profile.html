@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Block Smash Cash - Profile</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            background: #0a0a1a;
+            font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+            color: #fff;
+        }
+        #app {
+            max-width: 420px;
+            width: 100%;
+            height: 100dvh;
+            max-height: 100dvh;
+            margin: 0 auto;
+            background: #12122a;
+            border-radius: 0;
+            padding: 16px 16px 8px;
+            border: 1px solid #2a2a5a;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        @media (min-width: 421px) {
+            #app {
+                border-radius: 24px;
+                height: 90vh;
+                max-height: 740px;
+                margin-top: 20px;
+            }
+        }
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .content-area::-webkit-scrollbar { width: 3px; }
+        .content-area::-webkit-scrollbar-thumb { background: #2a2a5a; border-radius: 10px; }
+
+        .profile-header { text-align: center; padding: 4px 0 6px; flex-shrink: 0; }
+        .profile-header .username { font-size: 24px; font-weight: 700; color: #00ddff; }
+        .profile-header .uid { font-size: 12px; color: #8888bb; margin-top: 2px; }
+        .profile-header .rank-badge {
+            display: inline-block;
+            margin-top: 4px;
+            background: #1a1a3a;
+            padding: 4px 16px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #ffd700;
+            border: 1px solid #2a2a5a;
+        }
+
+        .profile-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .profile-stats .s {
+            background: #1a1a3a;
+            border-radius: 10px;
+            padding: 8px 4px;
+            text-align: center;
+            border: 1px solid #2a2a5a;
+        }
+        .profile-stats .s .num { font-size: 18px; font-weight: 700; color: #ffd700; }
+        .profile-stats .s .lbl { font-size: 9px; color: #8888bb; text-transform: uppercase; }
+
+        .balance-box {
+            background: linear-gradient(135deg, #1a2a3a, #0a1a2a);
+            border: 1px solid #2a5a7a;
+            border-radius: 14px;
+            padding: 12px 14px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+        .balance-box .amount { font-size: 28px; font-weight: 700; color: #ffd700; }
+        .balance-box .label { font-size: 11px; color: #8888bb; }
+        .balance-box .next-date { font-size: 11px; color: #66ff88; margin-top: 2px; }
+
+        .profile-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .profile-actions .btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s;
+            text-align: center;
+        }
+        .profile-actions .btn:active { transform: scale(0.96); }
+        .btn-withdraw { background: linear-gradient(135deg, #ffd700, #ffaa00); color: #000; }
+        .btn-invite { background: linear-gradient(135deg, #25D366, #128C7E); color: #fff; }
+        .btn-logout { background: #2a1a1a; border: 1px solid #ff4444; color: #ff4444; }
+
+        .history-box {
+            background: #1a1a3a;
+            border-radius: 12px;
+            padding: 10px;
+            border: 1px solid #2a2a5a;
+            flex-shrink: 0;
+        }
+        .history-box h3 { font-size: 13px; color: #aaa; margin-bottom: 4px; }
+        .history-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 0;
+            border-bottom: 1px solid #1a1a2a;
+            font-size: 12px;
+            color: #aaa;
+            flex-wrap: wrap;
+            gap: 2px;
+        }
+        .history-entry .txn { color: #88ccff; font-weight: 600; font-size: 11px; min-width: 80px; }
+        .history-entry .amount { font-weight: 600; color: #ffd700; }
+        .history-entry .status.done { color: #66ff88; }
+        .history-entry .status.pending { color: #ffaa00; }
+        .history-entry .status.rejected { color: #ff4444; }
+
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            background: #1a1a3a;
+            border-radius: 16px;
+            padding: 6px 2px;
+            margin-top: 8px;
+            border: 1px solid #2a2a5a;
+            flex-shrink: 0;
+            width: 100%;
+            overflow-x: auto;
+            gap: 2px;
+        }
+        .bottom-nav a {
+            background: none;
+            border: none;
+            color: #8888bb;
+            font-size: 10px;
+            padding: 4px 6px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.25s;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+            min-width: 40px;
+            flex-shrink: 0;
+        }
+        .bottom-nav a .icon { font-size: 18px; line-height: 1; }
+        .bottom-nav a.active {
+            color: #00ddff;
+            background: rgba(0, 221, 255, 0.08);
+        }
+        .bottom-nav a:active { transform: scale(0.94); }
+
+        .toast-msg {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a2a1a;
+            border: 1px solid #33aa55;
+            border-radius: 12px;
+            padding: 10px 20px;
+            color: #66ff88;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 1000;
+            max-width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            animation: fadeIn 0.3s ease;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+        .toast-msg.show { opacity: 1; }
+        .toast-msg.error { border-color: #ff4444; color: #ff6644; background: #2a1a1a; }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            backdrop-filter: blur(4px);
+            animation: fadeIn 0.2s ease;
+        }
+        .modal-overlay .modal {
+            background: #1a1a3a;
+            border-radius: 24px;
+            padding: 24px;
+            max-width: 380px;
+            width: 90%;
+            border: 1px solid #2a2a5a;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+        }
+        .modal-overlay .modal h3 { font-size: 20px; color: #ffd700; margin-bottom: 12px; text-align: center; }
+        .modal-overlay .modal input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 12px;
+            border: 2px solid #2a2a5a;
+            background: #0a0a1a;
+            color: #fff;
+            font-size: 15px;
+            outline: none;
+            margin-bottom: 10px;
+        }
+        .modal-overlay .modal input:focus { border-color: #00ddff; }
+        .modal-overlay .modal .modal-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 6px;
+        }
+        .modal-overlay .modal .modal-actions button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .modal-overlay .modal .modal-actions button:active { transform: scale(0.94); }
+        .modal-overlay .modal .modal-actions .submit { background: linear-gradient(135deg, #ffd700, #ffaa00); color: #000; }
+        .modal-overlay .modal .modal-actions .cancel { background: #2a2a5a; color: #aaa; }
+        .hidden { display: none !important; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div id="toastMsg" class="toast-msg"></div>
+
+    <div class="content-area">
+        <div class="profile-header">
+            <div class="username" id="profileUsername">Guest</div>
+            <div class="uid" id="profileUid">🆔 ID: —</div>
+            <div class="rank-badge" id="profileRank">Rank: #—</div>
+        </div>
+
+        <div class="profile-stats">
+            <div class="s"><div class="num" id="pPoints">0</div><div class="lbl">Points</div></div>
+            <div class="s"><div class="num" id="pGames">0</div><div class="lbl">Games</div></div>
+            <div class="s"><div class="num" id="pWins">0</div><div class="lbl">Wins</div></div>
+        </div>
+
+        <div class="balance-box" style="border-color: #00ddff;">
+            <div class="label">📊 CURRENT EARNINGS</div>
+            <div class="amount" id="pCurrentBalance">₨ 0</div>
+            <div class="next-date">Updates with prize pool (every 12h)</div>
+        </div>
+
+        <div class="balance-box" style="border-color: #ffd700;">
+            <div class="label">💰 AVAILABLE BALANCE</div>
+            <div class="amount" id="pAvailableBalance">₨ 0</div>
+            <div class="next-date" id="pNextDate">📅 Next withdrawal: 30 July 2026</div>
+        </div>
+
+        <div class="profile-actions">
+            <button class="btn btn-withdraw" id="withdrawBtn">💸 Withdraw to EasyPaisa</button>
+            <button class="btn btn-invite" id="inviteBtn">📤 Invite Friends</button>
+            <button class="btn btn-logout" id="logoutBtn">🚪 Logout</button>
+        </div>
+
+        <div class="history-box">
+            <h3>📜 Withdrawal History</h3>
+            <div id="wdHistoryList">
+                <div style="color:#888;text-align:center;padding:6px;font-size:13px;">No withdrawals yet.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="index.html">🏠<span>Home</span></a>
+        <a href="leaderboard.html">🏆<span>Top</span></a>
+        <a href="profile.html" class="active">👤<span>Profile</span></a>
+        <a href="referral.html">🔗<span>Referral</span></a>
+        <a href="admin.html" id="adminNavLink" style="display:none;">⚙️<span>Admin</span></a>
+    </div>
+</div>
+
+<!-- Withdraw Modal -->
+<div class="modal-overlay hidden" id="withdrawModal">
+    <div class="modal">
+        <h3>💸 Withdraw to EasyPaisa</h3>
+        <input type="text" id="wdAccountInput" placeholder="EasyPaisa Account Number" />
+        <input type="number" id="wdAmountInput" placeholder="Amount (₨)" min="50" />
+        <div style="font-size:12px;color:#888;margin-bottom:10px;text-align:center;">Min withdrawal: ₨ 50</div>
+        <div class="modal-actions">
+            <button class="submit" id="wdSubmitBtn">💰 Withdraw</button>
+            <button class="cancel" id="wdCancelBtn">Cancel</button>
+        </div>
+        <div id="wdModalStatus" style="font-size:13px;color:#888;margin-top:8px;text-align:center;"></div>
+    </div>
+</div>
+
+<script>
+    // ================================================================
+    // PROFILE - CORRECT CURRENT EARNINGS (TIERED SYSTEM)
+    // ================================================================
+
+    function getPrizeByRank(rank, pool) {
+        if (rank === 1) return pool * 0.10;
+        else if (rank >= 2 && rank <= 5) return (pool * 0.16) / 4;
+        else if (rank >= 6 && rank <= 10) return (pool * 0.13) / 5;
+        else if (rank >= 11 && rank <= 25) return (pool * 0.20) / 15;
+        else if (rank >= 26 && rank <= 50) return (pool * 0.17) / 25;
+        else if (rank >= 51 && rank <= 100) return (pool * 0.24) / 50;
+        else return 0;
+    }
+
+    function getUsers() {
+        try { return JSON.parse(localStorage.getItem('bs_users')) || []; } catch(e) { return []; }
+    }
+    function getWithdrawals() {
+        try { return JSON.parse(localStorage.getItem('bs_withdrawals')) || []; } catch(e) { return []; }
+    }
+    function getPool() {
+        return parseFloat(localStorage.getItem('bs_current_pool')) || 0;
+    }
+    function getCurrentUser() {
+        const name = localStorage.getItem('bs_username');
+        if (!name) return null;
+        return getUsers().find(u => u.username === name) || null;
+    }
+    function saveUsers(users) { localStorage.setItem('bs_users', JSON.stringify(users)); }
+    function saveWithdrawals(wds) { localStorage.setItem('bs_withdrawals', JSON.stringify(wds)); }
+    function getNextWithdrawalDate() {
+        const d = new Date();
+        let month = d.getMonth(), year = d.getFullYear(), day = 30;
+        if (d.getDate() > 30) { month++; if (month > 11) { month = 0; year++; } }
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        return day + ' ' + months[month] + ' ' + year;
+    }
+
+    function showToast(msg, isError) {
+        const el = document.getElementById('toastMsg');
+        el.textContent = msg;
+        el.className = 'toast-msg show' + (isError ? ' error' : '');
+        clearTimeout(el._timeout);
+        el._timeout = setTimeout(() => { el.classList.remove('show'); }, 3000);
+    }
+
+    function renderProfile() {
+        const user = getCurrentUser();
+        const pool = getPool();
+
+        if (!user) {
+            document.getElementById('profileUsername').textContent = 'Guest';
+            document.getElementById('profileUid').textContent = '🆔 ID: —';
+            document.getElementById('profileRank').textContent = 'Rank: #—';
+            document.getElementById('pPoints').textContent = '0';
+            document.getElementById('pGames').textContent = '0';
+            document.getElementById('pWins').textContent = '0';
+            document.getElementById('pCurrentBalance').textContent = '₨ 0';
+            document.getElementById('pAvailableBalance').textContent = '₨ 0';
+            document.getElementById('pNextDate').textContent = '📅 Next withdrawal: ' + getNextWithdrawalDate();
+            document.getElementById('wdHistoryList').innerHTML = '<div style="color:#888;text-align:center;padding:6px;font-size:13px;">Login to see history.</div>';
+            return;
+        }
+
+        const users = getUsers();
+        const sorted = [...users].sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0));
+        const rank = sorted.findIndex(u => u.username === user.username) + 1;
+
+        let currentEarnings = 0;
+        if (rank > 0 && rank <= 100 && pool > 0) {
+            currentEarnings = getPrizeByRank(rank, pool);
+        }
+
+        const available = user.availableBalance || 0;
+
+        document.getElementById('profileUsername').textContent = user.username;
+        document.getElementById('profileUid').textContent = '🆔 ID: ' + (user.userId || '—');
+        document.getElementById('profileRank').textContent = 'Rank: #' + (rank > 0 ? rank : '—');
+        document.getElementById('pPoints').textContent = (user.totalPoints || 0).toLocaleString();
+        document.getElementById('pGames').textContent = user.totalGames || 0;
+        document.getElementById('pWins').textContent = user.totalWins || 0;
+        document.getElementById('pCurrentBalance').textContent = '₨ ' + currentEarnings.toFixed(0);
+        document.getElementById('pAvailableBalance').textContent = '₨ ' + available.toFixed(0);
+        document.getElementById('pNextDate').textContent = '📅 Next withdrawal: ' + getNextWithdrawalDate();
+
+        const wds = getWithdrawals().filter(w => w.username === user.username);
+        const histContainer = document.getElementById('wdHistoryList');
+        if (wds.length === 0) {
+            histContainer.innerHTML = '<div style="color:#888;text-align:center;padding:6px;font-size:13px;">No withdrawals yet.</div>';
+        } else {
+            let hHtml = '';
+            wds.slice().reverse().forEach(w => {
+                const statusClass = w.status === 'done' ? 'done' : (w.status === 'rejected' ? 'rejected' : 'pending');
+                const statusLabel = w.status === 'done' ? '✅ Done' : (w.status === 'rejected' ? '❌ Rejected' : '⏳ Pending');
+                const txnDisplay = w.txnId ? `<span class="txn">🔗 ${w.txnId}</span>` : `<span class="txn" style="color:#555;">—</span>`;
+                hHtml += `
+                    <div class="history-entry">
+                        ${txnDisplay}
+                        <span class="amount">₨ ${w.amount.toFixed(0)}</span>
+                        <span class="status ${statusClass}">${statusLabel}</span>
+                    </div>
+                `;
+            });
+            histContainer.innerHTML = hHtml;
+        }
+    }
+
+    // ===== WITHDRAW MODAL =====
+    const modal = document.getElementById('withdrawModal');
+    const wdAccount = document.getElementById('wdAccountInput');
+    const wdAmount = document.getElementById('wdAmountInput');
+    const wdStatus = document.getElementById('wdModalStatus');
+
+    document.getElementById('withdrawBtn').addEventListener('click', function() {
+        const user = getCurrentUser();
+        if (!user) { showToast('Please login first.', true); return; }
+        const available = user.availableBalance || 0;
+        if (available < 50) {
+            showToast('Minimum balance required: ₨ 50', true);
+            return;
+        }
+        modal.classList.remove('hidden');
+        wdAccount.value = '';
+        wdAmount.value = '';
+        wdStatus.textContent = '';
+        wdStatus.style.color = '#888';
+    });
+
+    document.getElementById('wdCancelBtn').addEventListener('click', function() { modal.classList.add('hidden'); });
+    modal.addEventListener('click', function(e) { if (e.target === modal) modal.classList.add('hidden'); });
+
+    document.getElementById('wdSubmitBtn').addEventListener('click', function() {
+        const user = getCurrentUser();
+        if (!user) { wdStatus.textContent = '❌ Please login.'; wdStatus.style.color = '#ff6644'; return; }
+        const account = wdAccount.value.trim();
+        const amount = parseFloat(wdAmount.value);
+        const available = user.availableBalance || 0;
+        if (!account) { wdStatus.textContent = '❌ Please enter account number.'; wdStatus.style.color = '#ff6644'; return; }
+        if (!amount || amount < 50) { wdStatus.textContent = '❌ Minimum withdrawal is ₨ 50.'; wdStatus.style.color = '#ff6644'; return; }
+        if (amount > available) { wdStatus.textContent = '❌ Insufficient available balance. You have ₨ ' + available.toFixed(0); wdStatus.style.color = '#ff6644'; return; }
+
+        let users = getUsers();
+        const userIndex = users.findIndex(u => u.username === user.username);
+        if (userIndex === -1) { wdStatus.textContent = '❌ User not found.'; return; }
+        users[userIndex].availableBalance = (users[userIndex].availableBalance || 0) - amount;
+        saveUsers(users);
+
+        const wds = getWithdrawals();
+        const txn = 'TXN-' + String(Date.now()).slice(-6);
+        wds.push({ txn, username: user.username, account, amount, status: 'pending', date: new Date().toISOString() });
+        saveWithdrawals(wds);
+
+        wdStatus.textContent = '✅ Withdrawal request sent! TXN: ' + txn;
+        wdStatus.style.color = '#66ff88';
+        setTimeout(() => { modal.classList.add('hidden'); renderProfile(); }, 1200);
+    });
+
+    document.getElementById('inviteBtn').addEventListener('click', function() {
+        const user = getCurrentUser();
+        if (!user) { showToast('Please login first.', true); return; }
+        const link = window.location.origin + window.location.pathname.replace('profile.html', 'index.html') + '?ref=' + encodeURIComponent(user.username);
+        const text = '🎮 Join Block Smash Cash and earn rewards!\nUse my referral link: ' + link;
+        if (navigator.share) {
+            navigator.share({ title: 'Block Smash Cash', text, url: link }).catch(() => {});
+        } else {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast('📤 Referral link copied!', false);
+            }).catch(() => {
+                showToast('📤 Share: ' + link, false);
+            });
+        }
+    });
+
+    document.getElementById('logoutBtn').addEventListener('click', function() {
+        if (confirm('Are you sure you want to logout?')) {
+            localStorage.removeItem('bs_username');
+            window.location.href = 'index.html';
+        }
+    });
+
+    if (window.location.search.includes('admin=true')) {
+        document.getElementById('adminNavLink').style.display = 'flex';
+    }
+
+    renderProfile();
+    setInterval(renderProfile, 60000);
+</script>
+</body>
+</html>
