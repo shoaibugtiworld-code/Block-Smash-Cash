@@ -286,7 +286,7 @@
         <div class="balance-box" style="border-color: #ffd700;">
             <div class="label">💰 AVAILABLE BALANCE</div>
             <div class="amount" id="pAvailableBalance">₨ 0</div>
-            <div class="next-date" id="pNextDate">📅 Next withdrawal: 25 July 2026</div>
+            <div class="next-date" id="pNextDate">📅 Next withdrawal: 30 July 2026</div>
         </div>
 
         <div class="profile-actions">
@@ -330,7 +330,11 @@
 <script>
     // ================================================================
     // PROFILE - WITH SUPABASE
+    // Vercel Clean URL | 30th July 2026
     // ================================================================
+
+    // --- Vercel Base URL ---
+    const BASE_URL = 'https://block-smash-cash.vercel.app';
 
     // --- BOT VERIFICATION CHECK (every 3 hours) ---
     function checkBotVerification() {
@@ -340,7 +344,7 @@
 
         if (!verified || (Date.now() - timestamp) >= threeHours) {
             const currentPage = 'profile.html';
-            window.location.href = 'bot.html?return=' + encodeURIComponent(currentPage);
+            window.location.href = BASE_URL + '/bot.html?return=' + encodeURIComponent(currentPage);
         }
     }
 
@@ -351,14 +355,14 @@
     (async function() {
         const username = localStorage.getItem('bs_username');
         if (!username) {
-            window.location.href = 'login.html';
+            window.location.href = BASE_URL + '/login.html';
             return;
         }
 
         const user = await window.getUser(username);
         if (!user) {
             localStorage.removeItem('bs_username');
-            window.location.href = 'login.html';
+            window.location.href = BASE_URL + '/login.html';
             return;
         }
 
@@ -381,8 +385,8 @@
 
     function getNextWithdrawalDate() {
         const d = new Date();
-        let month = d.getMonth(), year = d.getFullYear(), day = 25;
-        if (d.getDate() > 25) { month++; if (month > 11) { month = 0; year++; } }
+        let month = d.getMonth(), year = d.getFullYear(), day = 30;
+        if (d.getDate() > 30) { month++; if (month > 11) { month = 0; year++; } }
         const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
         return day + ' ' + months[month] + ' ' + year;
     }
@@ -423,7 +427,7 @@
             if (!user) {
                 showToast('User not found. Please login again.', true);
                 localStorage.removeItem('bs_username');
-                window.location.href = 'login.html';
+                window.location.href = BASE_URL + '/login.html';
                 return;
             }
 
@@ -579,7 +583,7 @@
     document.getElementById('inviteBtn').addEventListener('click', function() {
         const username = localStorage.getItem('bs_username');
         if (!username) { showToast('Please login first.', true); return; }
-        const link = window.location.origin + window.location.pathname.replace('profile.html', 'index.html') + '?ref=' + encodeURIComponent(username);
+        const link = BASE_URL + '/?ref=' + encodeURIComponent(username);
         const text = '🎮 Join Block Smash Cash and earn rewards!\nUse my referral link: ' + link;
         if (navigator.share) {
             navigator.share({ title: 'Block Smash Cash', text: text, url: link }).catch(() => {});
@@ -596,7 +600,7 @@
     // LOGOUT - Redirect to logout.html
     // ================================================================
     document.getElementById('logoutBtn').addEventListener('click', function() {
-        window.location.href = 'logout.html';
+        window.location.href = BASE_URL + '/logout.html';
     });
 
     // ================================================================
