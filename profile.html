@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Block Smash Cash - Profile</title>
     <style>
+        /* === ALL STYLES SAME AS BEFORE === */
+        /* (previous CSS remains unchanged) */
+        /* Just adding modal styles for logout */
         * {
             margin: 0;
             padding: 0;
@@ -325,6 +328,18 @@
     </div>
 </div>
 
+<!-- ===== LOGOUT CONFIRM MODAL (Custom - No Website Name) ===== -->
+<div class="modal-overlay hidden" id="logoutModal">
+    <div class="modal">
+        <h3>🚪 Logout</h3>
+        <p style="color:#aaa;text-align:center;margin-bottom:16px;font-size:15px;">Are you sure you want to logout?</p>
+        <div class="modal-actions">
+            <button class="submit" id="logoutConfirmBtn" style="background:#ff4444;color:#fff;">Yes, Logout</button>
+            <button class="cancel" id="logoutCancelBtn">Cancel</button>
+        </div>
+    </div>
+</div>
+
 <script>
     // ================================================================
     // PROFILE - CORRECT CURRENT EARNINGS (TIERED SYSTEM)
@@ -483,6 +498,7 @@
         setTimeout(() => { modal.classList.add('hidden'); renderProfile(); }, 1200);
     });
 
+    // ===== INVITE =====
     document.getElementById('inviteBtn').addEventListener('click', function() {
         const user = getCurrentUser();
         if (!user) { showToast('Please login first.', true); return; }
@@ -499,17 +515,35 @@
         }
     });
 
+    // ===== LOGOUT (Custom Modal - No Website Name) =====
+    const logoutModal = document.getElementById('logoutModal');
+    const logoutConfirmBtn = document.getElementById('logoutConfirmBtn');
+    const logoutCancelBtn = document.getElementById('logoutCancelBtn');
+
     document.getElementById('logoutBtn').addEventListener('click', function() {
-        if (confirm('Are you sure you want to logout?')) {
-            localStorage.removeItem('bs_username');
-            window.location.href = 'index.html';
-        }
+        logoutModal.classList.remove('hidden');
     });
 
+    logoutCancelBtn.addEventListener('click', function() {
+        logoutModal.classList.add('hidden');
+    });
+
+    logoutModal.addEventListener('click', function(e) {
+        if (e.target === logoutModal) logoutModal.classList.add('hidden');
+    });
+
+    logoutConfirmBtn.addEventListener('click', function() {
+        logoutModal.classList.add('hidden');
+        localStorage.removeItem('bs_username');
+        window.location.href = 'index.html';
+    });
+
+    // ===== ADMIN NAV =====
     if (window.location.search.includes('admin=true')) {
         document.getElementById('adminNavLink').style.display = 'flex';
     }
 
+    // ===== INIT =====
     renderProfile();
     setInterval(renderProfile, 60000);
 </script>
