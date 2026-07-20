@@ -178,6 +178,30 @@
             cursor: pointer;
         }
 
+        /* Admin Actions */
+        .admin-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+        .admin-actions a {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13px;
+            text-align: center;
+            transition: transform 0.15s;
+            min-width: 80px;
+        }
+        .admin-actions a:active { transform: scale(0.94); }
+        .admin-actions .ads-btn {
+            background: #ffd700;
+            color: #000;
+        }
+
         .admin-user {
             background: #1a1a3a;
             border-radius: 12px;
@@ -428,6 +452,11 @@
                 <input type="number" id="prizeInput" placeholder="Enter amount" min="0" />
                 <button class="update-btn" id="updatePrizeBtn">Update</button>
                 <div class="next-update" id="nextUpdateTime">⏳ Next auto-update: --</div>
+            </div>
+
+            <!-- Admin Actions: Ad Settings -->
+            <div class="admin-actions">
+                <a href="ads.html" class="ads-btn">📢 Ad Settings</a>
             </div>
 
             <div class="search-filter">
