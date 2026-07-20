@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Block Smash Cash - Profile</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="supabase.js"></script>
     <style>
         * {
             margin: 0;
@@ -327,20 +329,46 @@
 
 <script>
     // ================================================================
-    // PROFILE - CORRECT CURRENT EARNINGS (TIERED SYSTEM)
-    // Withdrawal date: 25th of each month
+    // PROFILE - WITH SUPABASE
     // ================================================================
 
-    // --- CHECK IF USER IS LOGGED IN ---
-    (function() {
+    // --- BOT VERIFICATION CHECK (every 3 hours) ---
+    function checkBotVerification() {
+        const verified = localStorage.getItem('bs_bot_verified') === 'true';
+        const timestamp = parseInt(localStorage.getItem('bs_bot_timestamp') || '0');
+        const threeHours = 3 * 60 * 60 * 1000;
+
+        if (!verified || (Date.now() - timestamp) >= threeHours) {
+            const currentPage = 'profile.html';
+            window.location.href = 'bot.html?return=' + encodeURIComponent(currentPage);
+        }
+    }
+
+    checkBotVerification();
+    setInterval(checkBotVerification, 5 * 60 * 1000);
+
+    // --- CHECK LOGIN ---
+    (async function() {
         const username = localStorage.getItem('bs_username');
         if (!username) {
             window.location.href = 'login.html';
             return;
         }
+
+        const user = await window.getUser(username);
+        if (!user) {
+            localStorage.removeItem('bs_username');
+            window.location.href = 'login.html';
+            return;
+        }
+
+        // User is valid, render profile
+        renderProfile();
     })();
 
-    // --- TIERED PRIZE DISTRIBUTION ---
+    // ================================================================
+    // TIERED PRIZE DISTRIBUTION (same as leaderboard)
+    // ================================================================
     function getPrizeByRank(rank, pool) {
         if (rank === 1) return pool * 0.10;
         else if (rank >= 2 && rank <= 5) return (pool * 0.16) / 4;
@@ -351,24 +379,6 @@
         else return 0;
     }
 
-    function getUsers() {
-        try { return JSON.parse(localStorage.getItem('bs_users')) || []; } catch(e) { return []; }
-    }
-    function getWithdrawals() {
-        try { return JSON.parse(localStorage.getItem('bs_withdrawals')) || []; } catch(e) { return []; }
-    }
-    function getPool() {
-        return parseFloat(localStorage.getItem('bs_current_pool')) || 0;
-    }
-    function getCurrentUser() {
-        const name = localStorage.getItem('bs_username');
-        if (!name) return null;
-        return getUsers().find(u => u.username === name) || null;
-    }
-    function saveUsers(users) { localStorage.setItem('bs_users', JSON.stringify(users)); }
-    function saveWithdrawals(wds) { localStorage.setItem('bs_withdrawals', JSON.stringify(wds)); }
-
-    // --- UPDATED: Withdrawal date changed to 25th ---
     function getNextWithdrawalDate() {
         const d = new Date();
         let month = d.getMonth(), year = d.getFullYear(), day = 25;
@@ -377,6 +387,9 @@
         return day + ' ' + months[month] + ' ' + year;
     }
 
+    // ================================================================
+    // SHOW TOAST
+    // ================================================================
     function showToast(msg, isError) {
         const el = document.getElementById('toastMsg');
         el.textContent = msg;
@@ -385,125 +398,191 @@
         el._timeout = setTimeout(() => { el.classList.remove('show'); }, 3000);
     }
 
-    function renderProfile() {
-        const user = getCurrentUser();
-        const pool = getPool();
+    // ================================================================
+    // RENDER PROFILE
+    // ================================================================
+    async function renderProfile() {
+        try {
+            const username = localStorage.getItem('bs_username');
+            if (!username) {
+                document.getElementById('profileUsername').textContent = 'Guest';
+                document.getElementById('profileUid').textContent = '🆔 ID: —';
+                document.getElementById('profileRank').textContent = 'Rank: #—';
+                document.getElementById('pPoints').textContent = '0';
+                document.getElementById('pGames').textContent = '0';
+                document.getElementById('pWins').textContent = '0';
+                document.getElementById('pCurrentBalance').textContent = '₨ 0';
+                document.getElementById('pAvailableBalance').textContent = '₨ 0';
+                document.getElementById('pNextDate').textContent = '📅 Next withdrawal: ' + getNextWithdrawalDate();
+                document.getElementById('wdHistoryList').innerHTML = '<div style="color:#888;text-align:center;padding:6px;font-size:13px;">Login to see history.</div>';
+                return;
+            }
 
-        if (!user) {
-            document.getElementById('profileUsername').textContent = 'Guest';
-            document.getElementById('profileUid').textContent = '🆔 ID: —';
-            document.getElementById('profileRank').textContent = 'Rank: #—';
-            document.getElementById('pPoints').textContent = '0';
-            document.getElementById('pGames').textContent = '0';
-            document.getElementById('pWins').textContent = '0';
-            document.getElementById('pCurrentBalance').textContent = '₨ 0';
-            document.getElementById('pAvailableBalance').textContent = '₨ 0';
+            // Fetch user data from Supabase
+            const user = await window.getUser(username);
+            if (!user) {
+                showToast('User not found. Please login again.', true);
+                localStorage.removeItem('bs_username');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Get all users to calculate rank
+            const allUsers = await window.getAllUsers();
+            const sorted = [...allUsers].sort((a, b) => (b.total_points || 0) - (a.total_points || 0));
+            const rank = sorted.findIndex(u => u.username === username) + 1;
+
+            // Get prize pool
+            const pool = await window.getPrizePool();
+
+            // Calculate current earnings
+            let currentEarnings = 0;
+            if (rank > 0 && rank <= 100 && pool > 0) {
+                currentEarnings = getPrizeByRank(rank, pool);
+            }
+
+            const available = user.available_balance || 0;
+
+            // Update UI
+            document.getElementById('profileUsername').textContent = user.username;
+            document.getElementById('profileUid').textContent = '🆔 ID: ' + (user.user_id || '—');
+            document.getElementById('profileRank').textContent = 'Rank: #' + (rank > 0 ? rank : '—');
+            document.getElementById('pPoints').textContent = (user.total_points || 0).toLocaleString();
+            document.getElementById('pGames').textContent = user.total_games || 0;
+            document.getElementById('pWins').textContent = user.total_wins || 0;
+            document.getElementById('pCurrentBalance').textContent = '₨ ' + currentEarnings.toFixed(0);
+            document.getElementById('pAvailableBalance').textContent = '₨ ' + available.toFixed(0);
             document.getElementById('pNextDate').textContent = '📅 Next withdrawal: ' + getNextWithdrawalDate();
-            document.getElementById('wdHistoryList').innerHTML = '<div style="color:#888;text-align:center;padding:6px;font-size:13px;">Login to see history.</div>';
-            return;
-        }
 
-        const users = getUsers();
-        const sorted = [...users].sort((a, b) => (b.totalPoints || 0) - (a.totalPoints || 0));
-        const rank = sorted.findIndex(u => u.username === user.username) + 1;
+            // Withdrawal history
+            const withdrawals = await window.getWithdrawals(username);
+            const histContainer = document.getElementById('wdHistoryList');
+            if (!withdrawals || withdrawals.length === 0) {
+                histContainer.innerHTML = '<div style="color:#888;text-align:center;padding:6px;font-size:13px;">No withdrawals yet.</div>';
+            } else {
+                let hHtml = '';
+                withdrawals.slice().reverse().forEach(w => {
+                    const statusClass = w.status === 'done' ? 'done' : (w.status === 'rejected' ? 'rejected' : 'pending');
+                    const statusLabel = w.status === 'done' ? '✅ Done' : (w.status === 'rejected' ? '❌ Rejected' : '⏳ Pending');
+                    const txnDisplay = w.txn_id ? `<span class="txn">🔗 ${w.txn_id}</span>` : `<span class="txn" style="color:#555;">—</span>`;
+                    hHtml += `
+                        <div class="history-entry">
+                            ${txnDisplay}
+                            <span class="amount">₨ ${w.amount.toFixed(0)}</span>
+                            <span class="status ${statusClass}">${statusLabel}</span>
+                        </div>
+                    `;
+                });
+                histContainer.innerHTML = hHtml;
+            }
 
-        let currentEarnings = 0;
-        if (rank > 0 && rank <= 100 && pool > 0) {
-            currentEarnings = getPrizeByRank(rank, pool);
-        }
-
-        const available = user.availableBalance || 0;
-
-        document.getElementById('profileUsername').textContent = user.username;
-        document.getElementById('profileUid').textContent = '🆔 ID: ' + (user.userId || '—');
-        document.getElementById('profileRank').textContent = 'Rank: #' + (rank > 0 ? rank : '—');
-        document.getElementById('pPoints').textContent = (user.totalPoints || 0).toLocaleString();
-        document.getElementById('pGames').textContent = user.totalGames || 0;
-        document.getElementById('pWins').textContent = user.totalWins || 0;
-        document.getElementById('pCurrentBalance').textContent = '₨ ' + currentEarnings.toFixed(0);
-        document.getElementById('pAvailableBalance').textContent = '₨ ' + available.toFixed(0);
-        document.getElementById('pNextDate').textContent = '📅 Next withdrawal: ' + getNextWithdrawalDate();
-
-        const wds = getWithdrawals().filter(w => w.username === user.username);
-        const histContainer = document.getElementById('wdHistoryList');
-        if (wds.length === 0) {
-            histContainer.innerHTML = '<div style="color:#888;text-align:center;padding:6px;font-size:13px;">No withdrawals yet.</div>';
-        } else {
-            let hHtml = '';
-            wds.slice().reverse().forEach(w => {
-                const statusClass = w.status === 'done' ? 'done' : (w.status === 'rejected' ? 'rejected' : 'pending');
-                const statusLabel = w.status === 'done' ? '✅ Done' : (w.status === 'rejected' ? '❌ Rejected' : '⏳ Pending');
-                const txnDisplay = w.txnId ? `<span class="txn">🔗 ${w.txnId}</span>` : `<span class="txn" style="color:#555;">—</span>`;
-                hHtml += `
-                    <div class="history-entry">
-                        ${txnDisplay}
-                        <span class="amount">₨ ${w.amount.toFixed(0)}</span>
-                        <span class="status ${statusClass}">${statusLabel}</span>
-                    </div>
-                `;
-            });
-            histContainer.innerHTML = hHtml;
+        } catch (error) {
+            console.error('Error rendering profile:', error);
+            showToast('Error loading profile data.', true);
         }
     }
 
-    // ===== WITHDRAW MODAL =====
+    // ================================================================
+    // WITHDRAW MODAL
+    // ================================================================
     const modal = document.getElementById('withdrawModal');
     const wdAccount = document.getElementById('wdAccountInput');
     const wdAmount = document.getElementById('wdAmountInput');
     const wdStatus = document.getElementById('wdModalStatus');
 
     document.getElementById('withdrawBtn').addEventListener('click', function() {
-        const user = getCurrentUser();
-        if (!user) { showToast('Please login first.', true); return; }
-        const available = user.availableBalance || 0;
-        if (available < 50) {
-            showToast('Minimum balance required: ₨ 50', true);
-            return;
-        }
-        modal.classList.remove('hidden');
-        wdAccount.value = '';
-        wdAmount.value = '';
-        wdStatus.textContent = '';
-        wdStatus.style.color = '#888';
+        const username = localStorage.getItem('bs_username');
+        if (!username) { showToast('Please login first.', true); return; }
+
+        // Get user data to check balance
+        window.getUser(username).then(user => {
+            if (!user) { showToast('User not found.', true); return; }
+            const available = user.available_balance || 0;
+            if (available < 50) {
+                showToast('Minimum balance required: ₨ 50', true);
+                return;
+            }
+            modal.classList.remove('hidden');
+            wdAccount.value = '';
+            wdAmount.value = '';
+            wdStatus.textContent = '';
+            wdStatus.style.color = '#888';
+        }).catch(() => {
+            showToast('Error fetching user data.', true);
+        });
     });
 
     document.getElementById('wdCancelBtn').addEventListener('click', function() { modal.classList.add('hidden'); });
     modal.addEventListener('click', function(e) { if (e.target === modal) modal.classList.add('hidden'); });
 
-    document.getElementById('wdSubmitBtn').addEventListener('click', function() {
-        const user = getCurrentUser();
-        if (!user) { wdStatus.textContent = '❌ Please login.'; wdStatus.style.color = '#ff6644'; return; }
+    document.getElementById('wdSubmitBtn').addEventListener('click', async function() {
+        const username = localStorage.getItem('bs_username');
+        if (!username) { wdStatus.textContent = '❌ Please login.'; wdStatus.style.color = '#ff6644'; return; }
+
         const account = wdAccount.value.trim();
         const amount = parseFloat(wdAmount.value);
-        const available = user.availableBalance || 0;
-        if (!account) { wdStatus.textContent = '❌ Please enter account number.'; wdStatus.style.color = '#ff6644'; return; }
-        if (!amount || amount < 50) { wdStatus.textContent = '❌ Minimum withdrawal is ₨ 50.'; wdStatus.style.color = '#ff6644'; return; }
-        if (amount > available) { wdStatus.textContent = '❌ Insufficient available balance. You have ₨ ' + available.toFixed(0); wdStatus.style.color = '#ff6644'; return; }
 
-        let users = getUsers();
-        const userIndex = users.findIndex(u => u.username === user.username);
-        if (userIndex === -1) { wdStatus.textContent = '❌ User not found.'; return; }
-        users[userIndex].availableBalance = (users[userIndex].availableBalance || 0) - amount;
-        saveUsers(users);
+        if (!account) {
+            wdStatus.textContent = '❌ Please enter account number.';
+            wdStatus.style.color = '#ff6644';
+            return;
+        }
+        if (!amount || amount < 50) {
+            wdStatus.textContent = '❌ Minimum withdrawal is ₨ 50.';
+            wdStatus.style.color = '#ff6644';
+            return;
+        }
 
-        const wds = getWithdrawals();
-        const txn = 'TXN-' + String(Date.now()).slice(-6);
-        wds.push({ txn, username: user.username, account, amount, status: 'pending', date: new Date().toISOString() });
-        saveWithdrawals(wds);
+        try {
+            // Get current user data
+            const user = await window.getUser(username);
+            if (!user) { wdStatus.textContent = '❌ User not found.'; return; }
 
-        wdStatus.textContent = '✅ Withdrawal request sent! TXN: ' + txn;
-        wdStatus.style.color = '#66ff88';
-        setTimeout(() => { modal.classList.add('hidden'); renderProfile(); }, 1200);
+            const available = user.available_balance || 0;
+            if (amount > available) {
+                wdStatus.textContent = '❌ Insufficient available balance. You have ₨ ' + available.toFixed(0);
+                wdStatus.style.color = '#ff6644';
+                return;
+            }
+
+            // Deduct from available balance
+            const newAvailable = available - amount;
+            await window.updateUserBalance(username, user.balance || 0, newAvailable);
+
+            // Create withdrawal request
+            const txn = 'TXN-' + String(Date.now()).slice(-6);
+            const success = await window.createWithdrawal(txn, username, account, amount);
+            if (!success) {
+                // Rollback balance if failed
+                await window.updateUserBalance(username, user.balance || 0, available);
+                wdStatus.textContent = '❌ Failed to create withdrawal request.';
+                wdStatus.style.color = '#ff6644';
+                return;
+            }
+
+            wdStatus.textContent = '✅ Withdrawal request sent! TXN: ' + txn;
+            wdStatus.style.color = '#66ff88';
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                renderProfile();
+            }, 1200);
+        } catch (error) {
+            console.error('Error during withdrawal:', error);
+            wdStatus.textContent = '❌ An error occurred. Please try again.';
+            wdStatus.style.color = '#ff6644';
+        }
     });
 
-    // ===== INVITE =====
+    // ================================================================
+    // INVITE FRIENDS
+    // ================================================================
     document.getElementById('inviteBtn').addEventListener('click', function() {
-        const user = getCurrentUser();
-        if (!user) { showToast('Please login first.', true); return; }
-        const link = window.location.origin + window.location.pathname.replace('profile.html', 'index.html') + '?ref=' + encodeURIComponent(user.username);
+        const username = localStorage.getItem('bs_username');
+        if (!username) { showToast('Please login first.', true); return; }
+        const link = window.location.origin + window.location.pathname.replace('profile.html', 'index.html') + '?ref=' + encodeURIComponent(username);
         const text = '🎮 Join Block Smash Cash and earn rewards!\nUse my referral link: ' + link;
         if (navigator.share) {
-            navigator.share({ title: 'Block Smash Cash', text, url: link }).catch(() => {});
+            navigator.share({ title: 'Block Smash Cash', text: text, url: link }).catch(() => {});
         } else {
             navigator.clipboard.writeText(text).then(() => {
                 showToast('📤 Referral link copied!', false);
@@ -513,18 +592,23 @@
         }
     });
 
-    // ===== LOGOUT - Redirect to logout.html =====
+    // ================================================================
+    // LOGOUT - Redirect to logout.html
+    // ================================================================
     document.getElementById('logoutBtn').addEventListener('click', function() {
         window.location.href = 'logout.html';
     });
 
-    // ===== ADMIN NAV =====
+    // ================================================================
+    // ADMIN NAV
+    // ================================================================
     if (window.location.search.includes('admin=true')) {
         document.getElementById('adminNavLink').style.display = 'flex';
     }
 
-    // ===== INIT =====
-    renderProfile();
+    // ================================================================
+    // AUTO REFRESH
+    // ================================================================
     setInterval(renderProfile, 60000);
 </script>
 </body>
