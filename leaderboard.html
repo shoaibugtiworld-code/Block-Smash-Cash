@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Block Smash Cash - Leaderboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            background: #0a0a1a;
+            font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+            color: #fff;
+        }
+        #app {
+            max-width: 420px;
+            width: 100%;
+            height: 100dvh;
+            max-height: 100dvh;
+            margin: 0 auto;
+            background: #12122a;
+            border-radius: 0;
+            padding: 16px 16px 8px;
+            border: 1px solid #2a2a5a;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        @media (min-width: 421px) {
+            #app {
+                border-radius: 24px;
+                height: 90vh;
+                max-height: 740px;
+                margin-top: 20px;
+            }
+        }
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+            display: flex;
+            flex-direction: column;
+        }
+        .content-area::-webkit-scrollbar { width: 3px; }
+        .content-area::-webkit-scrollbar-thumb { background: #2a2a5a; border-radius: 10px; }
+
+        .lb-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 4px 10px;
+            border-bottom: 1px solid #2a2a5a;
+            margin-bottom: 8px;
+            flex-shrink: 0;
+        }
+        .lb-header h2 { font-size: 20px; color: #ffd700; }
+        .lb-header .phase-tag {
+            font-size: 11px;
+            color: #66ff88;
+            background: #1a2a1a;
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid #33aa55;
+        }
+        .lb-stats {
+            display: flex;
+            justify-content: space-around;
+            background: #1a1a3a;
+            border-radius: 12px;
+            padding: 8px;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #aaa;
+            border: 1px solid #2a2a5a;
+            flex-shrink: 0;
+        }
+        .lb-stats span { font-weight: 600; color: #fff; }
+        .lb-list {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+        }
+        .lb-list::-webkit-scrollbar { width: 3px; }
+        .lb-list::-webkit-scrollbar-thumb { background: #2a2a5a; border-radius: 10px; }
+
+        .lb-entry {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 6px 8px;
+            border-bottom: 1px solid #1a1a3a;
+            border-radius: 6px;
+        }
+        .lb-entry .rank { color: #8888bb; font-weight: 600; width: 40px; font-size: 14px; }
+        .lb-entry .name { flex: 1; color: #ddd; font-size: 14px; font-weight: 500; }
+        .lb-entry .score { color: #00ddff; font-weight: 700; font-size: 14px; margin-right: 8px; min-width: 60px; text-align: right; }
+        .lb-entry .amount {
+            color: #ffd700;
+            font-weight: 700;
+            font-size: 14px;
+            min-width: 70px;
+            text-align: right;
+            background: rgba(255, 215, 0, 0.1);
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        .lb-entry .bonus-badge {
+            font-size: 10px;
+            color: #66ff88;
+            background: rgba(102, 255, 136, 0.15);
+            padding: 1px 8px;
+            border-radius: 10px;
+            margin-left: 4px;
+        }
+        .lb-entry.me {
+            background: #2a2a5a;
+            border-radius: 8px;
+            margin: 2px 0;
+            border-left: 3px solid #ffd700;
+            padding-left: 6px;
+        }
+        .lb-entry.me .name { color: #ffd700; font-weight: 700; }
+        .lb-entry.me .amount { background: rgba(255, 215, 0, 0.25); color: #fff; }
+        .lb-footer {
+            text-align: center;
+            padding: 10px 0 4px;
+            font-size: 12px;
+            color: #8888bb;
+            border-top: 1px solid #1a1a3a;
+            margin-top: 8px;
+            flex-shrink: 0;
+        }
+        .lb-footer .highlight { color: #ffd700; font-weight: 700; }
+        .lb-footer .rank-badge {
+            display: inline-block;
+            background: #2a2a5a;
+            padding: 2px 10px;
+            border-radius: 12px;
+            margin: 0 4px;
+        }
+
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            background: #1a1a3a;
+            border-radius: 16px;
+            padding: 6px 2px;
+            margin-top: 8px;
+            border: 1px solid #2a2a5a;
+            flex-shrink: 0;
+            width: 100%;
+            overflow-x: auto;
+            gap: 2px;
+        }
+        .bottom-nav a {
+            background: none;
+            border: none;
+            color: #8888bb;
+            font-size: 10px;
+            padding: 4px 6px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.25s;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+            min-width: 40px;
+            flex-shrink: 0;
+        }
+        .bottom-nav a .icon { font-size: 18px; line-height: 1; }
+        .bottom-nav a.active {
+            color: #00ddff;
+            background: rgba(0, 221, 255, 0.08);
+        }
+        .bottom-nav a:active { transform: scale(0.94); }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="content-area">
+        <div class="lb-header">
+            <h2>🏆 LEADERBOARD</h2>
+            <span class="phase-tag" id="lbPhaseTag">Phase 1</span>
+        </div>
+        <div class="lb-stats">
+            <span>👥 <span id="lbUsers">0</span></span>
+            <span>🎯 <span id="lbPool">₨ 0</span></span>
+            <span>🏅 <span id="lbWinners">0</span></span>
+        </div>
+        <div class="lb-list" id="lbList">
+            <div style="text-align:center;padding:30px;color:#888;">No players yet.</div>
+        </div>
+        <div class="lb-footer">
+            <span id="lbYourRank">Your Rank: #—</span>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="index.html">🏠<span>Home</span></a>
+        <a href="leaderboard.html" class="active">🏆<span>Top</span></a>
+        <a href="profile.html">👤<span>Profile</span></a>
+        <a href="referral.html">🔗<span>Referral</span></a>
+        <a href="admin.html" id="adminNavLink" style="display:none;">⚙️<span>Admin</span></a>
+    </div>
+</div>
+<script>
+    // ================================================================
+    // LEADERBOARD - TIERED PRIZE DISTRIBUTION + REFERRAL BONUS
+    // ================================================================
+
+    function getUsers() {
+        try { return JSON.parse(localStorage.getItem('bs_users')) || []; } catch(e) { return []; }
+    }
+    function getPool() {
+        return parseFloat(localStorage.getItem('bs_current_pool')) || 45230;
+    }
+    function getCurrentUser() {
+        const name = localStorage.getItem('bs_username');
+        if (!name) return null;
+        return getUsers().find(u => u.username === name) || null;
+    }
+    function getReferrals() {
+        try { return JSON.parse(localStorage.getItem('bs_referrals')) || []; } catch(e) { return []; }
+    }
+
+    function getPrizeByRank(rank, pool) {
+        if (rank === 1) return pool * 0.10;
+        else if (rank >= 2 && rank <= 5) return (pool * 0.16) / 4;
+        else if (rank >= 6 && rank <= 10) return (pool * 0.13) / 5;
+        else if (rank >= 11 && rank <= 25) return (pool * 0.20) / 15;
+        else if (rank >= 26 && rank <= 50) return (pool * 0.17) / 25;
+        else if (rank >= 51 && rank <= 100) return (pool * 0.24) / 50;
+        else return 0;
+    }
+
+    function getBonusPercent(activeCount) {
+        if (activeCount >= 1000) return 100;
+        else if (activeCount >= 500) return 75;
+        else if (activeCount >= 250) return 50;
+        else if (activeCount >= 100) return 35;
+        else if (activeCount >= 50) return 20;
+        else if (activeCount >= 25) return 10;
+        else if (activeCount >= 10) return 5;
+        else if (activeCount >= 5) return 5;
+        else return 0;
+    }
+
+    function getFinalScore(user) {
+        const baseScore = user.totalPoints || 0;
+        const allRefs = getReferrals();
+        const myRefs = allRefs.filter(r => r.referrer === user.username);
+        const active = myRefs.filter(r => r.active === true).length;
+        const bonus = getBonusPercent(active);
+        return baseScore + Math.floor(baseScore * (bonus / 100));
+    }
+
+    function renderLeaderboard() {
+        const users = getUsers();
+        const pool = getPool();
+        const allRefs = getReferrals();
+
+        const usersWithBonus = users.map(u => {
+            const myRefs = allRefs.filter(r => r.referrer === u.username);
+            const active = myRefs.filter(r => r.active === true).length;
+            const bonus = getBonusPercent(active);
+            const finalScore = (u.totalPoints || 0) + Math.floor((u.totalPoints || 0) * (bonus / 100));
+            return { ...u, finalScore, bonus, activeRefs: active };
+        });
+
+        const sorted = [...usersWithBonus].sort((a, b) => b.finalScore - a.finalScore);
+        const top = sorted.slice(0, 100);
+        const list = document.getElementById('lbList');
+
+        document.getElementById('lbUsers').textContent = users.length;
+        document.getElementById('lbPool').textContent = '₨ ' + pool.toFixed(0);
+        document.getElementById('lbWinners').textContent = Math.min(users.length, 500);
+        document.getElementById('lbPhaseTag').textContent = 'Phase ' + (Math.floor(users.length / 100) + 1);
+
+        if (top.length === 0) {
+            list.innerHTML = '<div style="text-align:center;padding:30px;color:#888;">No players yet.</div>';
+            document.getElementById('lbYourRank').textContent = 'Your Rank: #—';
+            return;
+        }
+
+        const current = getCurrentUser();
+        let userRank = -1;
+        let userPrize = 0;
+        let html = '';
+
+        top.forEach((u, i) => {
+            const rank = i + 1;
+            const isMe = current && u.username === current.username;
+            if (isMe) {
+                userRank = rank;
+                userPrize = getPrizeByRank(rank, pool);
+            }
+            const displayName = u.username.length > 6 ? u.username.slice(0, 4) + '***' : u.username;
+            const prize = getPrizeByRank(rank, pool);
+            const bonusText = u.bonus > 0 ? `+${u.bonus}%` : '';
+            const refText = u.activeRefs > 0 ? `👥${u.activeRefs}` : '';
+
+            html += `
+                <div class="lb-entry${isMe ? ' me' : ''}">
+                    <span class="rank">#${rank}</span>
+                    <span class="name">
+                        ${displayName}
+                        ${refText ? `<span class="bonus-badge">${refText}</span>` : ''}
+                        ${bonusText ? `<span class="bonus-badge">${bonusText}</span>` : ''}
+                    </span>
+                    <span class="score">${u.finalScore.toLocaleString()}</span>
+                    <span class="amount">₨ ${prize.toFixed(0)}</span>
+                </div>
+            `;
+        });
+
+        list.innerHTML = html;
+
+        if (current && userRank > 0) {
+            const prize = getPrizeByRank(userRank, pool);
+            const userData = usersWithBonus.find(u => u.username === current.username);
+            const bonusText = userData && userData.bonus > 0 ? ` (${userData.bonus}% bonus)` : '';
+            document.getElementById('lbYourRank').innerHTML =
+                '🏅 Your Rank: <span class="highlight rank-badge">#' + userRank + '</span>' +
+                ' | 💰 Prize: <span class="highlight">₨ ' + prize.toFixed(0) + '</span>' +
+                bonusText +
+                (userRank <= 100 ? ' 🎉' : ' · Keep pushing!');
+        } else if (current) {
+            document.getElementById('lbYourRank').textContent = 'Your Rank: #— · Keep playing!';
+        } else {
+            document.getElementById('lbYourRank').textContent = 'Login to see your rank.';
+        }
+    }
+
+    if (window.location.search.includes('admin=true')) {
+        document.getElementById('adminNavLink').style.display = 'flex';
+    }
+
+    renderLeaderboard();
+    setInterval(renderLeaderboard, 60000);
+</script>
+</body>
+</html>
