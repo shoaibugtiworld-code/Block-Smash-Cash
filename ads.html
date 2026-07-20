@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Ad Settings - Block Smash Cash</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="supabase.js"></script>
     <style>
         * {
             margin: 0;
@@ -112,6 +114,10 @@
         .ad-setting .save-btn:active {
             transform: scale(0.94);
         }
+        .ad-setting .save-btn:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
         .ad-setting .current-link {
             font-size: 11px;
             color: #88ccff;
@@ -181,6 +187,7 @@
             pointer-events: none;
         }
         .toast-msg.show { opacity: 1; }
+        .toast-msg.error { border-color: #ff4444; color: #ff6644; background: #2a1a1a; }
     </style>
 </head>
 <body>
@@ -199,7 +206,7 @@
             <div class="label">🎯 Play Button Ad</div>
             <div class="desc">Shows when user clicks "PLAY NOW" on Home page</div>
             <input type="text" id="playAdInput" placeholder="Enter ad link..." />
-            <button class="save-btn" onclick="saveAdLink('playAd')">Save</button>
+            <button class="save-btn" id="playAdSaveBtn">Save</button>
             <div class="current-link" id="playAdDisplay">Current: <span id="playAdCurrent">—</span></div>
         </div>
 
@@ -208,7 +215,7 @@
             <div class="label">🔄 Replay / Game Over Ad</div>
             <div class="desc">Shows when game ends (every 2-4 games)</div>
             <input type="text" id="replayAdInput" placeholder="Enter ad link..." />
-            <button class="save-btn" onclick="saveAdLink('replayAd')">Save</button>
+            <button class="save-btn" id="replayAdSaveBtn">Save</button>
             <div class="current-link" id="replayAdDisplay">Current: <span id="replayAdCurrent">—</span></div>
         </div>
 
@@ -217,7 +224,7 @@
             <div class="label">💰 Reward Ad (2x/4x Score)</div>
             <div class="desc">Shows when user wants to double their score</div>
             <input type="text" id="rewardAdInput" placeholder="Enter ad link..." />
-            <button class="save-btn" onclick="saveAdLink('rewardAd')">Save</button>
+            <button class="save-btn" id="rewardAdSaveBtn">Save</button>
             <div class="current-link" id="rewardAdDisplay">Current: <span id="rewardAdCurrent">—</span></div>
         </div>
 
@@ -227,7 +234,7 @@
             <div class="desc">How often ads appear (games played between ads)</div>
             <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
                 <input type="number" id="adFrequencyInput" placeholder="e.g. 3" style="width:80px;" min="1" max="10" />
-                <button class="save-btn" onclick="saveAdFrequency()" style="background:#ffd700;color:#000;">Save</button>
+                <button class="save-btn" id="adFrequencySaveBtn" style="background:#ffd700;color:#000;">Save</button>
             </div>
             <div class="current-link">Current: Every <span id="adFrequencyDisplay">3</span> games</div>
         </div>
@@ -243,88 +250,121 @@
 
 <script>
     // ================================================================
-    // AD SETTINGS - Save to localStorage
+    // AD SETTINGS - Saved to Supabase (settings table), NOT localStorage
+    // These keys match what index.html / game.html read via getAdSetting()
     // ================================================================
 
-    const AD_KEYS = {
-        playAd: 'bs_ad_play',
-        replayAd: 'bs_ad_replay',
-        rewardAd: 'bs_ad_reward',
-        adFrequency: 'bs_ad_frequency'
-    };
+    (function() {
+        'use strict';
 
-    const DEFAULT_LINKS = {
-        playAd: 'https://shrtslug.biz/8YSjH',
-        replayAd: 'https://shrtslug.biz/8YSjH',
-        rewardAd: 'https://shrtslug.biz/8YSjH',
-        adFrequency: 3
-    };
+        const AD_KEYS = {
+            playAd: 'ad_play',
+            replayAd: 'ad_replay',
+            rewardAd: 'ad_reward',
+            adFrequency: 'ad_frequency'
+        };
 
-    function showToast(msg) {
-        const el = document.getElementById('toastMsg');
-        el.textContent = msg;
-        el.classList.add('show');
-        clearTimeout(el._timeout);
-        el._timeout = setTimeout(() => { el.classList.remove('show'); }, 2500);
-    }
+        const DEFAULT_FREQUENCY = 3;
 
-    function getAdLink(key) {
-        return localStorage.getItem(key) || DEFAULT_LINKS[key] || '';
-    }
-
-    function saveAdLink(type) {
         const inputMap = {
             playAd: 'playAdInput',
             replayAd: 'replayAdInput',
             rewardAd: 'rewardAdInput'
         };
-        const input = document.getElementById(inputMap[type]);
-        const value = input.value.trim();
-        if (!value) {
-            showToast('❌ Please enter a valid link.');
-            return;
-        }
-        localStorage.setItem(AD_KEYS[type], value);
-        loadSettings();
-        showToast('✅ ' + type + ' link saved!');
-    }
 
-    function saveAdFrequency() {
-        const input = document.getElementById('adFrequencyInput');
-        const value = parseInt(input.value);
-        if (!value || value < 1 || value > 10) {
-            showToast('❌ Please enter a number between 1 and 10.');
-            return;
+        function showToast(msg, isError) {
+            const el = document.getElementById('toastMsg');
+            el.textContent = msg;
+            el.className = 'toast-msg show' + (isError ? ' error' : '');
+            clearTimeout(el._timeout);
+            el._timeout = setTimeout(() => { el.classList.remove('show'); }, 2500);
         }
-        localStorage.setItem(AD_KEYS.adFrequency, String(value));
-        loadSettings();
-        showToast('✅ Ad frequency saved!');
-    }
 
-    function loadSettings() {
-        // Load all ad links
-        const types = ['playAd', 'replayAd', 'rewardAd'];
-        types.forEach(type => {
-            const link = getAdLink(type);
-            const displayEl = document.getElementById(type + 'Current');
-            const inputEl = document.getElementById(type + 'Input');
-            if (displayEl) displayEl.textContent = link || 'Not set';
-            if (inputEl) inputEl.value = link || '';
+        async function saveAdLink(type, btn) {
+            const input = document.getElementById(inputMap[type]);
+            const value = input.value.trim();
+            if (!value) {
+                showToast('❌ Please enter a valid link.', true);
+                return;
+            }
+            btn.disabled = true;
+            try {
+                const success = await window.updateAdSetting(AD_KEYS[type], value);
+                if (success) {
+                    await loadSettings();
+                    showToast('✅ ' + type + ' link saved!');
+                } else {
+                    showToast('❌ Failed to save. Try again.', true);
+                }
+            } catch (err) {
+                console.error('Error saving ad link:', err);
+                showToast('❌ Error saving link.', true);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function saveAdFrequency(btn) {
+            const input = document.getElementById('adFrequencyInput');
+            const value = parseInt(input.value);
+            if (!value || value < 1 || value > 10) {
+                showToast('❌ Please enter a number between 1 and 10.', true);
+                return;
+            }
+            btn.disabled = true;
+            try {
+                const success = await window.updateAdSetting(AD_KEYS.adFrequency, String(value));
+                if (success) {
+                    await loadSettings();
+                    showToast('✅ Ad frequency saved!');
+                } else {
+                    showToast('❌ Failed to save. Try again.', true);
+                }
+            } catch (err) {
+                console.error('Error saving ad frequency:', err);
+                showToast('❌ Error saving frequency.', true);
+            } finally {
+                btn.disabled = false;
+            }
+        }
+
+        async function loadSettings() {
+            try {
+                const types = ['playAd', 'replayAd', 'rewardAd'];
+                for (const type of types) {
+                    const link = await window.getAdSetting(AD_KEYS[type]);
+                    const displayEl = document.getElementById(type + 'Current');
+                    const inputEl = document.getElementById(inputMap[type]);
+                    if (displayEl) displayEl.textContent = link || 'Not set';
+                    if (inputEl) inputEl.value = link || '';
+                }
+
+                const freqRaw = await window.getAdSetting(AD_KEYS.adFrequency);
+                const freq = freqRaw ? parseInt(freqRaw) : DEFAULT_FREQUENCY;
+                document.getElementById('adFrequencyDisplay').textContent = freq;
+                document.getElementById('adFrequencyInput').value = freq;
+            } catch (err) {
+                console.error('Error loading ad settings:', err);
+                showToast('❌ Error loading settings.', true);
+            }
+        }
+
+        document.getElementById('playAdSaveBtn').addEventListener('click', function() {
+            saveAdLink('playAd', this);
+        });
+        document.getElementById('replayAdSaveBtn').addEventListener('click', function() {
+            saveAdLink('replayAd', this);
+        });
+        document.getElementById('rewardAdSaveBtn').addEventListener('click', function() {
+            saveAdLink('rewardAd', this);
+        });
+        document.getElementById('adFrequencySaveBtn').addEventListener('click', function() {
+            saveAdFrequency(this);
         });
 
-        // Load frequency
-        const freq = parseInt(localStorage.getItem(AD_KEYS.adFrequency)) || DEFAULT_LINKS.adFrequency;
-        document.getElementById('adFrequencyDisplay').textContent = freq;
-        document.getElementById('adFrequencyInput').value = freq;
-    }
-
-    // Load on page load
-    loadSettings();
-
-    // Also expose functions globally for onclick
-    window.saveAdLink = saveAdLink;
-    window.saveAdFrequency = saveAdFrequency;
-    window.getAdLink = getAdLink;
+        // Load on page load
+        loadSettings();
+    })();
 </script>
 </body>
 </html>
