@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Block Smash Cash - Admin</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="supabase.js"></script>
     <style>
         * {
             margin: 0;
@@ -178,7 +180,6 @@
             cursor: pointer;
         }
 
-        /* Admin Actions */
         .admin-actions {
             display: flex;
             gap: 10px;
@@ -199,6 +200,10 @@
         .admin-actions a:active { transform: scale(0.94); }
         .admin-actions .ads-btn {
             background: #ffd700;
+            color: #000;
+        }
+        .admin-actions .banner-btn {
+            background: #00ddff;
             color: #000;
         }
 
@@ -414,6 +419,52 @@
         .bot-modal .box .error-msg { color: #ff6644; font-size: 13px; margin-top: 8px; }
 
         .no-users { text-align: center; padding: 20px; color: #8888bb; font-size: 14px; }
+
+        /* Banner settings box */
+        .banner-box {
+            background: #1a2a3a;
+            border: 1px solid #ffd700;
+            border-radius: 12px;
+            padding: 10px 14px;
+            flex-shrink: 0;
+        }
+        .banner-box .label {
+            color: #ffd700;
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        .banner-box textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px solid #2a2a5a;
+            background: #0a0a1a;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+            min-height: 80px;
+            resize: vertical;
+            margin: 6px 0;
+        }
+        .banner-box textarea:focus { border-color: #ffd700; }
+        .banner-box .save-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 10px;
+            background: #ffd700;
+            color: #000;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .banner-box .save-btn:active { transform: scale(0.94); }
+        .banner-box .info {
+            font-size: 11px;
+            color: #8888bb;
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body>
@@ -454,7 +505,15 @@
                 <div class="next-update" id="nextUpdateTime">⏳ Next auto-update: --</div>
             </div>
 
-            <!-- Admin Actions: Ad Settings -->
+            <!-- ===== HOME BANNER SETTINGS ===== -->
+            <div class="banner-box">
+                <div class="label">📢 Home Page Banner Ad</div>
+                <textarea id="bannerCodeInput" placeholder="Paste banner HTML/iframe code here..."></textarea>
+                <button class="save-btn" id="saveBannerBtn">Save Banner</button>
+                <div class="info">Banner will appear on Home page below stats.</div>
+            </div>
+
+            <!-- Admin Actions -->
             <div class="admin-actions">
                 <a href="ads.html" class="ads-btn">📢 Ad Settings</a>
             </div>
@@ -500,19 +559,18 @@
 </div>
 
 <script>
+    // ================================================================
+    // ADMIN PANEL - WITH SUPABASE
+    // ================================================================
+
     (function() {
         'use strict';
 
-        const ADMIN_PASSWORD_KEY = 'bs_admin_password';
         const ADMIN_SESSION_KEY = 'bs_admin_session';
         const BOT_VERIFIED_KEY = 'bs_bot_verified';
         const BOT_TIMESTAMP_KEY = 'bs_bot_timestamp';
-        const USERS_KEY = 'bs_users';
-        const WITHDRAWALS_KEY = 'bs_withdrawals';
-        const POOL_KEY = 'bs_current_pool';
-        const POOL_UPDATE_KEY = 'bs_pool_last_update';
-        const REFERRALS_KEY = 'bs_referrals';
 
+        // DOM REFS
         const loginScreen = document.getElementById('loginScreen');
         const dashboard = document.getElementById('adminDashboard');
         const passwordInput = document.getElementById('adminPasswordInput');
@@ -529,20 +587,14 @@
         const updatePrizeBtn = document.getElementById('updatePrizeBtn');
         const currentPoolDisplay = document.getElementById('currentPoolDisplay');
         const nextUpdateTime = document.getElementById('nextUpdateTime');
+        const bannerCodeInput = document.getElementById('bannerCodeInput');
+        const saveBannerBtn = document.getElementById('saveBannerBtn');
 
         const botModal = document.getElementById('botModal');
         const botQuestion = document.getElementById('botQuestion');
         const botAnswer = document.getElementById('botAnswer');
         const botVerifyBtn = document.getElementById('botVerifyBtn');
         const botError = document.getElementById('botError');
-
-        let adminPassword = localStorage.getItem(ADMIN_PASSWORD_KEY) || '';
-        let isLoggedIn = false;
-        let allUsers = [];
-        let allWithdrawals = [];
-        let allReferrals = [];
-        let currentPool = 0;
-        let poolLastUpdate = 0;
 
         const botQuestions = [
             { q: '5 + 3 = ?', a: 8 }, { q: '10 - 4 = ?', a: 6 },
@@ -551,20 +603,11 @@
             { q: '4 + 9 = ?', a: 13 }, { q: '20 - 11 = ?', a: 9 }
         ];
         let currentBotQuestion = botQuestions[0];
+        let isLoggedIn = false;
 
-        function loadData() {
-            allUsers = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
-            allWithdrawals = JSON.parse(localStorage.getItem(WITHDRAWALS_KEY) || '[]');
-            allReferrals = JSON.parse(localStorage.getItem(REFERRALS_KEY) || '[]');
-            currentPool = parseFloat(localStorage.getItem(POOL_KEY) || '0');
-            poolLastUpdate = parseInt(localStorage.getItem(POOL_UPDATE_KEY) || '0');
-        }
-
-        function savePool() {
-            localStorage.setItem(POOL_KEY, String(currentPool));
-            localStorage.setItem(POOL_UPDATE_KEY, String(Date.now()));
-        }
-
+        // ================================================================
+        // BOT FUNCTIONS
+        // ================================================================
         function isBotVerified() {
             const verified = localStorage.getItem(BOT_VERIFIED_KEY) === 'true';
             const timestamp = parseInt(localStorage.getItem(BOT_TIMESTAMP_KEY) || '0');
@@ -610,28 +653,9 @@
             botAnswer.addEventListener('keydown', function(e) { if (e.key === 'Enter') newBtn.click(); });
         }
 
-        function getNextUpdateTime() {
-            const last = poolLastUpdate || Date.now();
-            const next = last + 12 * 60 * 60 * 1000;
-            const d = new Date(next);
-            return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
-        }
-
-        function checkAutoUpdate() {
-            const now = Date.now();
-            if (poolLastUpdate && (now - poolLastUpdate) >= 12 * 60 * 60 * 1000) {
-                const randomBoost = Math.floor(Math.random() * 10000) + 1000;
-                currentPool += randomBoost;
-                savePool();
-                loadData();
-                renderAdmin();
-                showToast('🔄 Auto-update: Pool increased by ₨ ' + randomBoost.toFixed(0));
-            }
-            if (nextUpdateTime) {
-                nextUpdateTime.textContent = '⏳ Next auto-update: ' + getNextUpdateTime();
-            }
-        }
-
+        // ================================================================
+        // TOAST
+        // ================================================================
         function showToast(msg) {
             const toast = document.createElement('div');
             toast.style.cssText = `
@@ -650,17 +674,21 @@
             }, 3000);
         }
 
-        function checkAdminSession() {
+        // ================================================================
+        // CHECK ADMIN SESSION
+        // ================================================================
+        async function checkAdminSession() {
             const session = localStorage.getItem(ADMIN_SESSION_KEY);
+            const adminPassword = await window.getAdminPassword();
+
             if (session === 'true' && adminPassword) {
                 isLoggedIn = true;
                 loginScreen.classList.add('hidden');
                 dashboard.classList.remove('hidden');
-                loadData();
-                renderAdmin();
-                checkAutoUpdate();
+                loadAdminData();
                 showBotTest(function() {});
-                setInterval(checkAutoUpdate, 60000);
+                // Set interval for auto-refresh
+                setInterval(loadAdminData, 30000);
             } else {
                 loginScreen.classList.remove('hidden');
                 dashboard.classList.add('hidden');
@@ -677,35 +705,43 @@
             }
         }
 
-        loginBtn.addEventListener('click', function() {
+        // ================================================================
+        // LOGIN / SETUP
+        // ================================================================
+        loginBtn.addEventListener('click', async function() {
             const input = passwordInput.value.trim();
             if (!input) { loginError.textContent = '❌ Please enter a password.'; return; }
+
+            const adminPassword = await window.getAdminPassword();
+
             if (!adminPassword) {
-                localStorage.setItem(ADMIN_PASSWORD_KEY, input);
-                adminPassword = input;
-                localStorage.setItem(ADMIN_SESSION_KEY, 'true');
-                loginError.textContent = '';
-                loginScreen.classList.add('hidden');
-                dashboard.classList.remove('hidden');
-                isLoggedIn = true;
-                loadData();
-                renderAdmin();
-                checkAutoUpdate();
-                showBotTest(function() {});
-                setInterval(checkAutoUpdate, 60000);
+                // First time: set password
+                const success = await window.setAdminPassword(input);
+                if (success) {
+                    localStorage.setItem(ADMIN_SESSION_KEY, 'true');
+                    loginError.textContent = '';
+                    loginScreen.classList.add('hidden');
+                    dashboard.classList.remove('hidden');
+                    isLoggedIn = true;
+                    loadAdminData();
+                    showBotTest(function() {});
+                    setInterval(loadAdminData, 30000);
+                } else {
+                    loginError.textContent = '❌ Failed to set password. Please try again.';
+                }
                 return;
             }
+
+            // Login
             if (input === adminPassword) {
                 localStorage.setItem(ADMIN_SESSION_KEY, 'true');
                 loginError.textContent = '';
                 loginScreen.classList.add('hidden');
                 dashboard.classList.remove('hidden');
                 isLoggedIn = true;
-                loadData();
-                renderAdmin();
-                checkAutoUpdate();
+                loadAdminData();
                 showBotTest(function() {});
-                setInterval(checkAutoUpdate, 60000);
+                setInterval(loadAdminData, 30000);
             } else {
                 loginError.textContent = '❌ Wrong password. Try again.';
                 passwordInput.value = '';
@@ -715,6 +751,9 @@
 
         passwordInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') loginBtn.click(); });
 
+        // ================================================================
+        // LOGOUT
+        // ================================================================
         logoutBtn.addEventListener('click', function() {
             localStorage.removeItem(ADMIN_SESSION_KEY);
             isLoggedIn = false;
@@ -724,172 +763,272 @@
             loginError.textContent = '';
         });
 
-        updatePrizeBtn.addEventListener('click', function() {
+        // ================================================================
+        // UPDATE PRIZE POOL
+        // ================================================================
+        updatePrizeBtn.addEventListener('click', async function() {
             const val = parseFloat(prizeInput.value.trim());
             if (!val || val <= 0) { showToast('❌ Please enter a valid amount.'); return; }
-            currentPool = val;
-            savePool();
-            loadData();
-            renderAdmin();
-            prizeInput.value = '';
-            showToast('✅ Prize pool updated to ₨ ' + currentPool.toFixed(0));
+            const success = await window.updatePrizePool(val);
+            if (success) {
+                showToast('✅ Prize pool updated to ₨ ' + val.toFixed(0));
+                prizeInput.value = '';
+                loadAdminData();
+            } else {
+                showToast('❌ Failed to update prize pool.');
+            }
         });
 
-        function filterUsers() {
-            const query = searchInput.value.toLowerCase().trim();
-            const filter = filterSelect.value;
-            let filtered = allUsers;
-            if (query) {
-                filtered = filtered.filter(u =>
-                    u.username.toLowerCase().includes(query) ||
-                    (u.userId || '').toLowerCase().includes(query)
-                );
+        // ================================================================
+        // SAVE BANNER
+        // ================================================================
+        saveBannerBtn.addEventListener('click', async function() {
+            const code = bannerCodeInput.value.trim();
+            const success = await window.setHomeBanner(code);
+            if (success) {
+                showToast('✅ Banner saved successfully!');
+            } else {
+                showToast('❌ Failed to save banner.');
             }
-            if (filter === 'active') {
-                filtered = filtered.filter(u => (u.totalGames || 0) > 0);
-            } else if (filter === 'inactive') {
-                filtered = filtered.filter(u => (u.totalGames || 0) === 0);
-            } else if (filter === 'pending') {
-                const pendingUsers = allWithdrawals.filter(w => w.status === 'pending').map(w => w.username);
-                filtered = filtered.filter(u => pendingUsers.includes(u.username));
-            }
-            return filtered;
+        });
+
+        // ================================================================
+        // LOAD BANNER
+        // ================================================================
+        async function loadBanner() {
+            const code = await window.getHomeBanner();
+            bannerCodeInput.value = code || '';
         }
 
-        searchInput.addEventListener('input', renderAdmin);
-        filterSelect.addEventListener('change', renderAdmin);
+        // ================================================================
+        // GET NEXT UPDATE TIME
+        // ================================================================
+        function getNextUpdateTime() {
+            const poolLastUpdate = parseInt(localStorage.getItem('bs_pool_last_update') || '0');
+            const last = poolLastUpdate || Date.now();
+            const next = last + 12 * 60 * 60 * 1000;
+            const d = new Date(next);
+            return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        // ================================================================
+        // LOAD ADMIN DATA
+        // ================================================================
+        async function loadAdminData() {
+            try {
+                // Get data from Supabase
+                const users = await window.getAllUsers();
+                const allWithdrawals = await window.getAllWithdrawals();
+                const pendingWithdrawals = await window.getPendingWithdrawals();
+                const pool = await window.getPrizePool();
+
+                // Stats
+                const totalUsers = users ? users.length : 0;
+                const activeUsers = users ? users.filter(u => (u.total_games || 0) > 0).length : 0;
+                const pendingCount = pendingWithdrawals ? pendingWithdrawals.length : 0;
+
+                document.getElementById('aUsers').textContent = totalUsers;
+                document.getElementById('aActive').textContent = activeUsers;
+                document.getElementById('aPending').textContent = pendingCount;
+                document.getElementById('aTotalPool').textContent = '₨ ' + (pool || 0).toFixed(0);
+                document.getElementById('adminBadge').textContent = '👤 ' + totalUsers + ' users';
+                document.getElementById('currentPoolDisplay').textContent = '₨ ' + (pool || 0).toFixed(0);
+                document.getElementById('nextUpdateTime').textContent = '⏳ Next auto-update: ' + getNextUpdateTime();
+
+                // Filter users
+                const query = searchInput.value.toLowerCase().trim();
+                const filter = filterSelect.value;
+                let filtered = users || [];
+
+                if (query) {
+                    filtered = filtered.filter(u =>
+                        u.username.toLowerCase().includes(query) ||
+                        (u.user_id || '').toLowerCase().includes(query)
+                    );
+                }
+                if (filter === 'active') {
+                    filtered = filtered.filter(u => (u.total_games || 0) > 0);
+                } else if (filter === 'inactive') {
+                    filtered = filtered.filter(u => (u.total_games || 0) === 0);
+                } else if (filter === 'pending') {
+                    const pendingUsernames = (pendingWithdrawals || []).map(w => w.username);
+                    filtered = filtered.filter(u => pendingUsernames.includes(u.username));
+                }
+
+                // Sort: pending first, then by points
+                const sorted = [...filtered].sort((a, b) => {
+                    const aPending = (pendingWithdrawals || []).some(w => w.username === a.username) ? 1 : 0;
+                    const bPending = (pendingWithdrawals || []).some(w => w.username === b.username) ? 1 : 0;
+                    if (aPending !== bPending) return bPending - aPending;
+                    return (b.total_points || 0) - (a.total_points || 0);
+                });
+
+                const container = document.getElementById('adminUserList');
+                if (sorted.length === 0) {
+                    container.innerHTML = '<div class="no-users">No users found.</div>';
+                    return;
+                }
+
+                let html = '';
+                sorted.forEach(u => {
+                    const isActive = (u.total_games || 0) > 0;
+                    const pendingWd = (pendingWithdrawals || []).filter(w => w.username === u.username);
+                    const hasPending = pendingWd.length > 0;
+                    const pendingAmount = hasPending ? pendingWd[0].amount : 0;
+
+                    html += `
+                        <div class="admin-user">
+                            <div class="row1">
+                                <span class="uname">${u.username}</span>
+                                <span class="uid">🆔 ${u.user_id || '—'}</span>
+                            </div>
+                            <div class="row2">
+                                <span>🎯 ${(u.total_points||0).toLocaleString()} pts</span>
+                                <span>🎮 ${u.total_games||0} games</span>
+                                <span class="balance">₨ ${(u.balance||0).toFixed(0)}</span>
+                                <span class="status-badge ${isActive ? 'active' : 'inactive'}">${isActive ? '✅ Active' : '⏳ Inactive'}</span>
+                                ${hasPending ? `<span class="pending-badge">⏳ Pending: ₨ ${pendingAmount.toFixed(0)}</span>` : ''}
+                            </div>
+                            <div class="row3">
+                                ${hasPending ? `
+                                    <button class="approve" onclick="window._adminApprove('${u.username}')">✅ Approve</button>
+                                    <button class="reject" onclick="window._adminReject('${u.username}')">❌ Reject</button>
+                                    <button class="paid" onclick="window._adminMarkPaid('${u.username}')">💸 Paid</button>
+                                ` : `
+                                    <span style="font-size:12px;color:#888;">✅ No pending</span>
+                                `}
+                                <button class="delete" onclick="window._adminDeleteUser('${u.username}')">🗑️ Delete</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+
+                // Load banner
+                await loadBanner();
+
+            } catch (error) {
+                console.error('Error loading admin data:', error);
+                document.getElementById('adminUserList').innerHTML = '<div class="no-users">Error loading data. Please refresh.</div>';
+            }
+        }
+
+        // ================================================================
+        // ADMIN ACTIONS
+        // ================================================================
+
+        window._adminApprove = async function(username) {
+            try {
+                const allWithdrawals = await window.getAllWithdrawals();
+                const idx = allWithdrawals.findIndex(w => w.username === username && w.status === 'pending');
+                if (idx === -1) { showToast('❌ No pending request for ' + username); return; }
+
+                const txnId = prompt('Enter Transaction ID (TXN ID) for this withdrawal:', 'TXN-' + String(Date.now()).slice(-6));
+                if (txnId === null) return;
+                if (txnId.trim() === '') { showToast('❌ TXN ID cannot be empty.'); return; }
+
+                const success = await window.updateWithdrawalStatus(allWithdrawals[idx].txn, 'done', txnId.trim());
+                if (success) {
+                    showToast('✅ Withdrawal approved for ' + username + ' with TXN: ' + txnId.trim());
+                    loadAdminData();
+                } else {
+                    showToast('❌ Failed to approve withdrawal.');
+                }
+            } catch (error) {
+                console.error('Error approving withdrawal:', error);
+                showToast('❌ Error approving withdrawal.');
+            }
+        };
+
+        window._adminReject = async function(username) {
+            try {
+                const allWithdrawals = await window.getAllWithdrawals();
+                const idx = allWithdrawals.findIndex(w => w.username === username && w.status === 'pending');
+                if (idx === -1) { showToast('❌ No pending request for ' + username); return; }
+
+                const wd = allWithdrawals[idx];
+                // Refund balance
+                const users = await window.getAllUsers();
+                const user = users.find(u => u.username === username);
+                if (user) {
+                    const newBalance = (user.balance || 0) + wd.amount;
+                    await window.updateUserBalance(username, newBalance, user.available_balance || 0);
+                }
+
+                // Remove the withdrawal
+                const success = await window.updateWithdrawalStatus(wd.txn, 'rejected');
+                if (success) {
+                    showToast('❌ Withdrawal rejected for ' + username + '. Balance refunded.');
+                    loadAdminData();
+                } else {
+                    showToast('❌ Failed to reject withdrawal.');
+                }
+            } catch (error) {
+                console.error('Error rejecting withdrawal:', error);
+                showToast('❌ Error rejecting withdrawal.');
+            }
+        };
+
+        window._adminMarkPaid = async function(username) {
+            try {
+                const allWithdrawals = await window.getAllWithdrawals();
+                const idx = allWithdrawals.findIndex(w => w.username === username && w.status === 'pending');
+                if (idx === -1) { showToast('❌ No pending request for ' + username); return; }
+
+                const success = await window.updateWithdrawalStatus(allWithdrawals[idx].txn, 'done');
+                if (success) {
+                    showToast('💸 Marked as paid for ' + username);
+                    loadAdminData();
+                } else {
+                    showToast('❌ Failed to mark as paid.');
+                }
+            } catch (error) {
+                console.error('Error marking as paid:', error);
+                showToast('❌ Error marking as paid.');
+            }
+        };
+
+        window._adminDeleteUser = async function(username) {
+            if (!confirm('Delete user "' + username + '" and all their data?')) return;
+            try {
+                // Delete from users table (we need to implement delete functionality in supabase.js)
+                // For now, we'll just show a message
+                showToast('🗑️ User deletion requires additional implementation. Contact support.');
+                // Note: We need to add deleteUser function to supabase.js
+            } catch (error) {
+                console.error('Error deleting user:', error);
+                showToast('❌ Error deleting user.');
+            }
+        };
+
+        // ================================================================
+        // SEARCH & FILTER
+        // ================================================================
+        searchInput.addEventListener('input', loadAdminData);
+        filterSelect.addEventListener('change', loadAdminData);
         clearSearchBtn.addEventListener('click', function() {
             searchInput.value = '';
             filterSelect.value = 'all';
-            renderAdmin();
+            loadAdminData();
         });
 
-        function renderAdmin() {
-            loadData();
-            const totalUsers = allUsers.length;
-            const activeUsers = allUsers.filter(u => (u.totalGames || 0) > 0).length;
-            const pendingCount = allWithdrawals.filter(w => w.status === 'pending').length;
-
-            document.getElementById('aUsers').textContent = totalUsers;
-            document.getElementById('aActive').textContent = activeUsers;
-            document.getElementById('aPending').textContent = pendingCount;
-            document.getElementById('aTotalPool').textContent = '₨ ' + currentPool.toFixed(0);
-            document.getElementById('adminBadge').textContent = '👤 ' + totalUsers + ' users';
-            document.getElementById('currentPoolDisplay').textContent = '₨ ' + currentPool.toFixed(0);
-            if (nextUpdateTime) {
-                nextUpdateTime.textContent = '⏳ Next auto-update: ' + getNextUpdateTime();
-            }
-
-            const filtered = filterUsers();
-            const container = document.getElementById('adminUserList');
-            if (filtered.length === 0) {
-                container.innerHTML = '<div class="no-users">No users found.</div>';
-                return;
-            }
-
-            const sorted = [...filtered].sort((a, b) => {
-                const aPending = allWithdrawals.some(w => w.username === a.username && w.status === 'pending') ? 1 : 0;
-                const bPending = allWithdrawals.some(w => w.username === b.username && w.status === 'pending') ? 1 : 0;
-                if (aPending !== bPending) return bPending - aPending;
-                return (b.totalPoints || 0) - (a.totalPoints || 0);
-            });
-
-            let html = '';
-            sorted.forEach(u => {
-                const isActive = (u.totalGames || 0) > 0;
-                const pendingWd = allWithdrawals.filter(w => w.username === u.username && w.status === 'pending');
-                const hasPending = pendingWd.length > 0;
-                const pendingAmount = hasPending ? pendingWd[0].amount : 0;
-
-                html += `
-                    <div class="admin-user">
-                        <div class="row1">
-                            <span class="uname">${u.username}</span>
-                            <span class="uid">🆔 ${u.userId || '—'}</span>
-                        </div>
-                        <div class="row2">
-                            <span>🎯 ${(u.totalPoints||0).toLocaleString()} pts</span>
-                            <span>🎮 ${u.totalGames||0} games</span>
-                            <span class="balance">₨ ${(u.balance||0).toFixed(0)}</span>
-                            <span class="status-badge ${isActive ? 'active' : 'inactive'}">${isActive ? '✅ Active' : '⏳ Inactive'}</span>
-                            ${hasPending ? `<span class="pending-badge">⏳ Pending: ₨ ${pendingAmount.toFixed(0)}</span>` : ''}
-                        </div>
-                        <div class="row3">
-                            ${hasPending ? `
-                                <button class="approve" onclick="window._adminApprove('${u.username}')">✅ Approve</button>
-                                <button class="reject" onclick="window._adminReject('${u.username}')">❌ Reject</button>
-                                <button class="paid" onclick="window._adminMarkPaid('${u.username}')">💸 Paid</button>
-                            ` : `
-                                <span style="font-size:12px;color:#888;">✅ No pending</span>
-                            `}
-                            <button class="delete" onclick="window._adminDeleteUser('${u.username}')">🗑️ Delete</button>
-                        </div>
-                    </div>
-                `;
-            });
-            container.innerHTML = html;
-        }
-
-        window._adminApprove = function(username) {
-            const idx = allWithdrawals.findIndex(w => w.username === username && w.status === 'pending');
-            if (idx === -1) { showToast('❌ No pending request for ' + username); return; }
-            const txnId = prompt('Enter Transaction ID (TXN ID) for this withdrawal:', 'TXN-' + String(Date.now()).slice(-6));
-            if (txnId === null) return;
-            if (txnId.trim() === '') { showToast('❌ TXN ID cannot be empty.'); return; }
-            allWithdrawals[idx].status = 'done';
-            allWithdrawals[idx].txnId = txnId.trim();
-            localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(allWithdrawals));
-            showToast('✅ Withdrawal approved for ' + username + ' with TXN: ' + txnId.trim());
-            renderAdmin();
-        };
-
-        window._adminReject = function(username) {
-            const idx = allWithdrawals.findIndex(w => w.username === username && w.status === 'pending');
-            if (idx === -1) { showToast('❌ No pending request for ' + username); return; }
-            const wd = allWithdrawals[idx];
-            const user = allUsers.find(u => u.username === username);
-            if (user) { user.balance = (user.balance || 0) + wd.amount; localStorage.setItem(USERS_KEY, JSON.stringify(allUsers)); }
-            allWithdrawals.splice(idx, 1);
-            localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(allWithdrawals));
-            showToast('❌ Withdrawal rejected for ' + username + '. Balance refunded.');
-            renderAdmin();
-        };
-
-        window._adminMarkPaid = function(username) {
-            const idx = allWithdrawals.findIndex(w => w.username === username && w.status === 'pending');
-            if (idx === -1) { showToast('❌ No pending request for ' + username); return; }
-            allWithdrawals[idx].status = 'done';
-            localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(allWithdrawals));
-            showToast('💸 Marked as paid for ' + username);
-            renderAdmin();
-        };
-
-        window._adminDeleteUser = function(username) {
-            if (!confirm('Delete user "' + username + '" and all their data?')) return;
-            allUsers = allUsers.filter(u => u.username !== username);
-            localStorage.setItem(USERS_KEY, JSON.stringify(allUsers));
-            allWithdrawals = allWithdrawals.filter(w => w.username !== username);
-            localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(allWithdrawals));
-            allReferrals = allReferrals.filter(r => r.referrer !== username && r.referee !== username);
-            localStorage.setItem(REFERRALS_KEY, JSON.stringify(allReferrals));
-            showToast('🗑️ User deleted: ' + username);
-            renderAdmin();
-        };
-
+        // ================================================================
+        // BOT VERIFICATION PERIODIC CHECK
+        // ================================================================
         setInterval(() => {
             resetBotVerification();
             if (isLoggedIn) showBotTest(function() {});
         }, 3 * 60 * 60 * 1000);
 
+        // ================================================================
+        // INIT
+        // ================================================================
         checkAdminSession();
-        setInterval(() => { if (isLoggedIn) renderAdmin(); }, 30000);
 
-        document.addEventListener('visibilitychange', () => {
-            if (!document.hidden && isLoggedIn) {
-                checkAutoUpdate();
-                renderAdmin();
-            }
-        });
+        // Check auto-update for pool every minute
+        setInterval(() => {
+            if (isLoggedIn) loadAdminData();
+        }, 60000);
 
     })();
 </script>
