@@ -236,6 +236,21 @@
     </div>
 </div>
 <script>
+    // ================================================================
+    // INDEX.HTML - HOME PAGE WITH LOGIN CHECK
+    // ================================================================
+
+    // --- CHECK IF USER IS LOGGED IN ---
+    (function() {
+        const username = localStorage.getItem('bs_username');
+        if (!username) {
+            // If not logged in, redirect to login page
+            window.location.href = 'login.html';
+            return;
+        }
+    })();
+
+    // --- DATA HELPERS ---
     function getUsers() {
         try { return JSON.parse(localStorage.getItem('bs_users')) || []; } catch(e) { return []; }
     }
@@ -246,6 +261,7 @@
         return localStorage.getItem(key) || '';
     }
 
+    // --- PHASES (100 ➜ 150 ➜ 200 ➜ 250 ➜ 500) ---
     function getPhase(count) {
         const phases = [100, 150, 200, 250, 500];
         let idx = 0;
