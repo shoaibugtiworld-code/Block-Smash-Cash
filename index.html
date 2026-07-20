@@ -233,18 +233,18 @@
         <a href="profile.html">👤<span>Profile</span></a>
         <a href="referral.html">🔗<span>Referral</span></a>
         <a href="admin.html" id="adminNavLink" style="display:none;">⚙️<span>Admin</span></a>
+        <a href="ads.html">📢<span>Ads</span></a>
     </div>
 </div>
 <script>
     // ================================================================
-    // INDEX.HTML - HOME PAGE WITH LOGIN CHECK
+    // INDEX.HTML - HOME PAGE WITH AD INTEGRATION
     // ================================================================
 
     // --- CHECK IF USER IS LOGGED IN ---
     (function() {
         const username = localStorage.getItem('bs_username');
         if (!username) {
-            // If not logged in, redirect to login page
             window.location.href = 'login.html';
             return;
         }
@@ -313,10 +313,17 @@
         document.getElementById('phaseArrow').textContent = getPhaseArrow(count);
     }
 
+    // ===== PLAY BUTTON WITH AD =====
     document.getElementById('homePlayBtn').addEventListener('click', function() {
-        const adLink = getAdLink('bs_ad_play');
-        if (adLink) { window.open(adLink, '_blank'); }
-        setTimeout(() => { window.location.href = 'game.html'; }, 300);
+        // Show ad from ads.js
+        if (typeof showPlayButtonAd === 'function') {
+            showPlayButtonAd(function() {
+                window.location.href = 'game.html';
+            });
+        } else {
+            // Fallback: just go to game
+            window.location.href = 'game.html';
+        }
     });
 
     if (window.location.search.includes('admin=true')) {
