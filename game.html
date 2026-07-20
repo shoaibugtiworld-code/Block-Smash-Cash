@@ -266,7 +266,11 @@
 <script>
     // ================================================================
     // GAME WITH SUPABASE INTEGRATION
+    // Vercel Clean URL | 30th July 2026
     // ================================================================
+
+    // --- Vercel Base URL ---
+    const BASE_URL = 'https://block-smash-cash.vercel.app';
 
     // --- BOT VERIFICATION CHECK (every 3 hours) ---
     function checkBotVerification() {
@@ -276,27 +280,25 @@
 
         if (!verified || (Date.now() - timestamp) >= threeHours) {
             const currentPage = 'game.html';
-            window.location.href = 'bot.html?return=' + encodeURIComponent(currentPage);
+            window.location.href = BASE_URL + '/bot.html?return=' + encodeURIComponent(currentPage);
         }
     }
 
-    // Check on load
     checkBotVerification();
-    // Check every 5 minutes
     setInterval(checkBotVerification, 5 * 60 * 1000);
 
     // --- CHECK LOGIN ---
     (async function() {
         const username = localStorage.getItem('bs_username');
         if (!username) {
-            window.location.href = 'login.html';
+            window.location.href = BASE_URL + '/login.html';
             return;
         }
 
         const user = await window.getUser(username);
         if (!user) {
             localStorage.removeItem('bs_username');
-            window.location.href = 'login.html';
+            window.location.href = BASE_URL + '/login.html';
             return;
         }
 
@@ -897,11 +899,9 @@
             if (!username) return;
 
             try {
-                // Get current user data
                 const user = await window.getUser(username);
                 if (!user) return;
 
-                // Calculate new stats
                 const currentPoints = user.total_points || 0;
                 const currentGames = user.total_games || 0;
                 const currentWins = user.total_wins || 0;
@@ -909,14 +909,12 @@
                 // Check if this is a win (score > 100 threshold)
                 const isWin = score > 100;
 
-                // Update stats
                 const newPoints = currentPoints + score;
                 const newGames = currentGames + 1;
                 const newWins = currentWins + (isWin ? 1 : 0);
 
                 await window.updateUserStats(username, newPoints, newGames, newWins);
 
-                // Also update high score in localStorage
                 if (score > highScore) {
                     highScore = score;
                     localStorage.setItem('bs_highScore', highScore);
