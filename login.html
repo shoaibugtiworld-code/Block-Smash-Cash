@@ -1,3 +1,6 @@
+<!-- ============================================================ -->
+<!-- FILE: login.html (COMPLETE - FIXED SCRIPT ORDER)            -->
+<!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -224,10 +227,8 @@
         const refDisplay = document.getElementById('refDisplay');
         const refCodeDisplay = document.getElementById('refCodeDisplay');
 
-        // --- Vercel Base URL (Clean, no GitHub name) ---
         const BASE_URL = 'https://block-smash-cash.vercel.app';
 
-        // --- Get referral from URL ---
         function getReferralFromURL() {
             const params = new URLSearchParams(window.location.search);
             return params.get('ref') || '';
@@ -235,34 +236,28 @@
 
         const refCode = getReferralFromURL();
 
-        // --- Check if already logged in ---
         async function checkAlreadyLoggedIn() {
             const username = localStorage.getItem('bs_username');
             if (username) {
-                // Verify user exists in Supabase
                 const user = await window.getUser(username);
                 if (user) {
                     window.location.href = BASE_URL + '/';
                     return true;
                 } else {
-                    // User not in Supabase, clear localStorage
                     localStorage.removeItem('bs_username');
                 }
             }
             return false;
         }
 
-        // --- Show referral if present ---
         if (refCode) {
             refDisplay.style.display = 'block';
             refCodeDisplay.textContent = refCode;
         }
 
-        // --- Handle login ---
         async function handleLogin() {
             const username = usernameInput.value.trim();
 
-            // Validation
             if (!username) {
                 statusMsg.textContent = '❌ Please enter a username.';
                 statusMsg.className = 'error-msg';
@@ -284,17 +279,14 @@
                 return;
             }
 
-            // Show loading
             loginBtn.disabled = true;
             loadingMsg.classList.add('show');
             statusMsg.textContent = '';
 
             try {
-                // Check if user exists in Supabase
                 const existingUser = await window.getUser(username);
 
                 if (existingUser) {
-                    // User exists - login
                     localStorage.setItem('bs_username', existingUser.username);
                     statusMsg.textContent = '✅ Welcome back, ' + existingUser.username + '!';
                     statusMsg.className = 'success-msg';
@@ -304,15 +296,7 @@
                     return;
                 }
 
-                // --- New user: create account ---
-                // Generate User ID
                 const userId = 'BSC' + String(Date.now()).slice(-6) + String(Math.floor(Math.random() * 1000)).padStart(3, '0');
-
-                const newUser = {
-                    username: username,
-                    userId: userId,
-                    referredBy: refCode || null
-                };
 
                 const created = await window.createUser(username, userId, refCode || null);
 
@@ -324,7 +308,6 @@
                     return;
                 }
 
-                // --- Save referral if exists ---
                 if (refCode) {
                     const referrals = await window.getAllReferrals() || [];
                     const already = referrals.find(r => r.referee === username);
@@ -333,7 +316,6 @@
                     }
                 }
 
-                // Save username and redirect
                 localStorage.setItem('bs_username', username);
                 statusMsg.textContent = '✅ Account created! Welcome, ' + username + '!';
                 statusMsg.className = 'success-msg';
@@ -350,7 +332,6 @@
             }
         }
 
-        // --- Events ---
         loginBtn.addEventListener('click', handleLogin);
 
         usernameInput.addEventListener('keydown', function(e) {
@@ -360,13 +341,10 @@
             }
         });
 
-        // Auto-focus
         usernameInput.focus();
 
-        // Check if already logged in
         checkAlreadyLoggedIn();
 
-        // --- If referral is present, show message ---
         if (refCode) {
             statusMsg.textContent = '🔗 You were referred by ' + refCode + '!';
             statusMsg.className = 'success-msg';
@@ -375,11 +353,6 @@
                 statusMsg.className = 'error-msg';
             }, 4000);
         }
-
-        // --- Check if we're on Vercel or GitHub Pages ---
-        // If on GitHub Pages, redirect to Vercel (optional)
-        // We'll keep it simple and just use the clean URLs
-
     })();
 </script>
 </body>
