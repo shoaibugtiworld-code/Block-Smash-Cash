@@ -322,7 +322,11 @@
 <script>
     // ================================================================
     // REFERRAL - WITH SUPABASE
+    // Vercel Clean URL | No GitHub username
     // ================================================================
+
+    // --- Vercel Base URL (Clean, no GitHub name) ---
+    const BASE_URL = 'https://block-smash-cash.vercel.app';
 
     // --- BOT VERIFICATION CHECK (every 3 hours) ---
     function checkBotVerification() {
@@ -332,7 +336,7 @@
 
         if (!verified || (Date.now() - timestamp) >= threeHours) {
             const currentPage = 'referral.html';
-            window.location.href = 'bot.html?return=' + encodeURIComponent(currentPage);
+            window.location.href = BASE_URL + '/bot.html?return=' + encodeURIComponent(currentPage);
         }
     }
 
@@ -343,14 +347,14 @@
     (async function() {
         const username = localStorage.getItem('bs_username');
         if (!username) {
-            window.location.href = 'login.html';
+            window.location.href = BASE_URL + '/login.html';
             return;
         }
 
         const user = await window.getUser(username);
         if (!user) {
             localStorage.removeItem('bs_username');
-            window.location.href = 'login.html';
+            window.location.href = BASE_URL + '/login.html';
             return;
         }
 
@@ -394,9 +398,8 @@
                 return;
             }
 
-            // Generate referral link
-            const baseUrl = window.location.origin + window.location.pathname.replace('referral.html', 'index.html');
-            const refLink = baseUrl + '?ref=' + encodeURIComponent(username);
+            // Generate referral link (Vercel clean URL)
+            const refLink = BASE_URL + '/?ref=' + encodeURIComponent(username);
             document.getElementById('refLinkDisplay').textContent = refLink;
 
             // Get referrals from Supabase
