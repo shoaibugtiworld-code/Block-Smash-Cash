@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Verify - Block Smash Cash</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="supabase.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0a0a1a;
+            font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+            color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .box {
+            max-width: 380px;
+            width: 100%;
+            background: #1a1a3a;
+            border-radius: 24px;
+            padding: 30px 24px;
+            border: 2px solid #ffd700;
+            text-align: center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9);
+        }
+        .box .icon {
+            font-size: 56px;
+            margin-bottom: 8px;
+        }
+        .box h2 {
+            font-size: 24px;
+            color: #ffd700;
+            margin-bottom: 4px;
+        }
+        .box p {
+            color: #aaa;
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+        .box .question {
+            font-size: 28px;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 12px;
+            background: #0a0a1a;
+            padding: 16px;
+            border-radius: 12px;
+        }
+        .box input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            border: 2px solid #2a2a5a;
+            background: #0a0a1a;
+            color: #fff;
+            font-size: 20px;
+            text-align: center;
+            outline: none;
+            margin-bottom: 12px;
+        }
+        .box input:focus {
+            border-color: #ffd700;
+        }
+        .box .verify-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 14px;
+            background: #ffd700;
+            color: #000;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .box .verify-btn:active {
+            transform: scale(0.96);
+        }
+        .box .error-msg {
+            color: #ff6644;
+            font-size: 13px;
+            margin-top: 8px;
+            min-height: 20px;
+        }
+        .box .redirect-info {
+            color: #8888bb;
+            font-size: 12px;
+            margin-top: 12px;
+        }
+    </style>
+</head>
+<body>
+<div class="box">
+    <div class="icon">🤖</div>
+    <h2>Verify You Are Human</h2>
+    <p>Complete this quick check to continue.</p>
+    <div class="question" id="botQuestion">5 + 3 = ?</div>
+    <input type="number" id="botAnswer" placeholder="Enter answer..." />
+    <button class="verify-btn" id="botVerifyBtn">✓ VERIFY</button>
+    <div id="botError" class="error-msg"></div>
+    <div class="redirect-info" id="redirectInfo"></div>
+</div>
+
+<script>
+    // ================================================================
+    // BOT VERIFICATION PAGE
+    // ================================================================
+
+    (function() {
+        'use strict';
+
+        const botQuestions = [
+            { q: '5 + 3 = ?', a: 8 },
+            { q: '10 - 4 = ?', a: 6 },
+            { q: '7 + 2 = ?', a: 9 },
+            { q: '12 - 5 = ?', a: 7 },
+            { q: '6 + 6 = ?', a: 12 },
+            { q: '15 - 8 = ?', a: 7 },
+            { q: '4 + 9 = ?', a: 13 },
+            { q: '20 - 11 = ?', a: 9 }
+        ];
+
+        let currentQuestion = botQuestions[Math.floor(Math.random() * botQuestions.length)];
+        document.getElementById('botQuestion').textContent = currentQuestion.q;
+
+        // Get the return URL from query params
+        const urlParams = new URLSearchParams(window.location.search);
+        const returnUrl = urlParams.get('return') || 'index.html';
+
+        document.getElementById('botVerifyBtn').addEventListener('click', function() {
+            const answer = parseInt(document.getElementById('botAnswer').value.trim());
+            const errorEl = document.getElementById('botError');
+            if (isNaN(answer)) {
+                errorEl.textContent = '❌ Please enter a valid number.';
+                return;
+            }
+            if (answer === currentQuestion.a) {
+                // Verified! Set flag in localStorage and redirect
+                localStorage.setItem('bs_bot_verified', 'true');
+                localStorage.setItem('bs_bot_timestamp', String(Date.now()));
+                document.getElementById('redirectInfo').textContent = '✅ Verified! Redirecting...';
+                errorEl.textContent = '';
+                setTimeout(() => {
+                    window.location.href = returnUrl;
+                }, 600);
+            } else {
+                errorEl.textContent = '❌ Wrong answer. Try again.';
+                document.getElementById('botAnswer').value = '';
+                // New question
+                currentQuestion = botQuestions[Math.floor(Math.random() * botQuestions.length)];
+                document.getElementById('botQuestion').textContent = currentQuestion.q;
+            }
+        });
+
+        document.getElementById('botAnswer').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                document.getElementById('botVerifyBtn').click();
+            }
+        });
+
+        // Auto-focus
+        document.getElementById('botAnswer').focus();
+
+        // If already verified recently, redirect immediately
+        const verified = localStorage.getItem('bs_bot_verified') === 'true';
+        const timestamp = parseInt(localStorage.getItem('bs_bot_timestamp') || '0');
+        if (verified && (Date.now() - timestamp) < 3 * 60 * 60 * 1000) {
+            // Already verified within 3 hours, redirect
+            window.location.href = returnUrl;
+        }
+    })();
+</script>
+</body>
+</html>
