@@ -6,29 +6,27 @@ const SUPABASE_URL = 'https://qwcfcqkgbwzabsjvkrse.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3Y2ZjcWtnYnd6YWJzanZrcnNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1Mzk0NzIsImV4cCI6MjEwMDExNTQ3Mn0.mlC1lCjD8xhKnMP5YX4fxbehuwoH6KkfO6OtEgiGgnM';
 
 // Initialize Supabase client
-const supabase = window.supabase || supabase;
-if (!window.supabase) {
-    // Load Supabase CDN if not already loaded
-    const script = document.createElement('script');
-    script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
-    document.head.appendChild(script);
-    // Wait for it to load
-    script.onload = function() {
-        window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-    };
-} else {
-    window.supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+let supabaseClient = null;
+
+function getSupabase() {
+    if (!supabaseClient) {
+        if (typeof supabase !== 'undefined') {
+            supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } else {
+            console.error('Supabase library not loaded');
+        }
+    }
+    return supabaseClient;
 }
 
 // ================================================================
 // DATABASE FUNCTIONS
 // ================================================================
 
-/**
- * Get a user by username
- */
 async function getUser(username) {
-    const { data, error } = await window.supabase
+    const client = getSupabase();
+    if (!client) return null;
+    const { data, error } = await client
         .from('users')
         .select('*')
         .eq('username', username)
@@ -40,11 +38,10 @@ async function getUser(username) {
     return data;
 }
 
-/**
- * Create a new user
- */
 async function createUser(username, userId, referredBy) {
-    const { data, error } = await window.supabase
+    const client = getSupabase();
+    if (!client) return null;
+    const { data, error } = await client
         .from('users')
         .insert([{
             username: username,
@@ -66,11 +63,10 @@ async function createUser(username, userId, referredBy) {
     return data;
 }
 
-/**
- * Update user's game stats
- */
 async function updateUserStats(username, points, games, wins) {
-    const { error } = await window.supabase
+    const client = getSupabase();
+    if (!client) return;
+    const { error } = await client
         .from('users')
         .update({
             total_points: points,
@@ -83,11 +79,10 @@ async function updateUserStats(username, points, games, wins) {
     }
 }
 
-/**
- * Update user's balance
- */
 async function updateUserBalance(username, balance, availableBalance) {
-    const { error } = await window.supabase
+    const client = getSupabase();
+    if (!client) return;
+    const { error } = await client
         .from('users')
         .update({
             balance: balance,
@@ -99,11 +94,10 @@ async function updateUserBalance(username, balance, availableBalance) {
     }
 }
 
-/**
- * Get all users (for leaderboard)
- */
 async function getAllUsers() {
-    const { data, error } = await window.supabase
+    const client = getSupabase();
+    if (!client) return [];
+    const { data, error } = await client
         .from('users')
         .select('*')
         .order('total_points', { ascending: false });
@@ -114,11 +108,10 @@ async function getAllUsers() {
     return data;
 }
 
-/**
- * Get all referrals for a referrer
- */
 async function getReferrals(referrer) {
-    const { data, error } = await window.supabase
+    const client = getSupabase();
+    if (!client) return [];
+    const { data, error } = await client
         .from('referrals')
         .select('*')
         .eq('referrer', referrer);
@@ -129,11 +122,10 @@ async function getReferrals(referrer) {
     return data;
 }
 
-/**
- * Add a referral record
- */
 async function addReferral(referrer, referee) {
-    const { error } = await window.supabase
+    const client = getSupabase();
+    if (!client) return;
+    const { error } = await client
         .from('referrals')
         .insert([{
             referrer: referrer,
@@ -146,11 +138,10 @@ async function addReferral(referrer, referee) {
     }
 }
 
-/**
- * Mark referral as active
- */
 async function activateReferral(referee) {
-    const { error } = await window.supabase
+    const client = getSupabase();
+    if (!client) return;
+    const { error } = await client
         .from('referrals')
         .update({ active: true })
         .eq('referee', referee);
@@ -159,11 +150,10 @@ async function activateReferral(referee) {
     }
 }
 
-/**
- * Get withdrawal history for a user
- */
 async function getWithdrawals(username) {
-    const { data, error } = await window.supabase
+    const client = getSupabase();
+    if (!client) return [];
+    const { data, error } = await client
         .from('withdrawals')
         .select('*')
         .eq('username', username)
@@ -175,11 +165,10 @@ async function getWithdrawals(username) {
     return data;
 }
 
-/**
- * Create a withdrawal request
- */
 async function createWithdrawal(txn, username, account, amount) {
-    const { error } = await window.supabase
+    const client = getSupabase();
+    if (!client) return false;
+    const { error } = await client
         .from('withdrawals')
         .insert([{
             txn: txn,
@@ -196,13 +185,12 @@ async function createWithdrawal(txn, username, account, amount) {
     return true;
 }
 
-/**
- * Update withdrawal status (admin)
- */
 async function updateWithdrawalStatus(txn, status, txnId) {
+    const client = getSupabase();
+    if (!client) return false;
     const updateData = { status: status };
     if (txnId) updateData.txn_id = txnId;
-    const { error } = await window.supabase
+    const { error } = await client
         .from('withdrawals')
         .update(updateData)
         .eq('txn', txn);
@@ -213,11 +201,10 @@ async function updateWithdrawalStatus(txn, status, txnId) {
     return true;
 }
 
-/**
- * Get all pending withdrawals (admin)
- */
 async function getPendingWithdrawals() {
-    const { data, error } = await window.supabase
+    const client = getSupabase();
+    if (!client) return [];
+    const { data, error } = await client
         .from('withdrawals')
         .select('*')
         .eq('status', 'pending')
@@ -229,11 +216,10 @@ async function getPendingWithdrawals() {
     return data;
 }
 
-/**
- * Get all withdrawals (admin)
- */
 async function getAllWithdrawals() {
-    const { data, error } = await window.supabase
+    const client = getSupabase();
+    if (!client) return [];
+    const { data, error } = await client
         .from('withdrawals')
         .select('*')
         .order('date', { ascending: false });
@@ -244,94 +230,75 @@ async function getAllWithdrawals() {
     return data;
 }
 
-/**
- * Get prize pool settings
- */
-async function getPrizePool() {
-    const { data, error } = await window.supabase
-        .from('settings')
-        .select('value')
-        .eq('key', 'current_pool')
-        .single();
-    if (error) {
-        console.error('Error fetching pool:', error);
-        return 45230;
-    }
-    return parseFloat(data.value) || 45230;
-}
-
-/**
- * Update prize pool (admin)
- */
-async function updatePrizePool(amount) {
-    const { error } = await window.supabase
-        .from('settings')
-        .update({ value: String(amount), updated_at: new Date().toISOString() })
-        .eq('key', 'current_pool');
-    if (error) {
-        console.error('Error updating pool:', error);
-        return false;
-    }
-    return true;
-}
-
-/**
- * Get admin password
- */
-async function getAdminPassword() {
-    const { data, error } = await window.supabase
-        .from('settings')
-        .select('value')
-        .eq('key', 'admin_password')
-        .single();
-    if (error) {
-        console.error('Error fetching admin password:', error);
-        return '';
-    }
-    return data.value || '';
-}
-
-/**
- * Set admin password (first time only)
- */
-async function setAdminPassword(password) {
-    const { error } = await window.supabase
-        .from('settings')
-        .upsert({ key: 'admin_password', value: password, updated_at: new Date().toISOString() }, { onConflict: 'key' });
-    if (error) {
-        console.error('Error setting admin password:', error);
-        return false;
-    }
-    return true;
-}
-
-/**
- * Get ad settings
- */
-async function getAdSetting(key) {
-    const { data, error } = await window.supabase
+// ===== SETTINGS FUNCTIONS =====
+async function getSetting(key) {
+    const client = getSupabase();
+    if (!client) return null;
+    const { data, error } = await client
         .from('settings')
         .select('value')
         .eq('key', key)
         .single();
     if (error) {
-        return '';
+        return null;
     }
-    return data.value || '';
+    return data ? data.value : null;
 }
 
-/**
- * Update ad setting (admin)
- */
-async function updateAdSetting(key, value) {
-    const { error } = await window.supabase
+async function setSetting(key, value) {
+    const client = getSupabase();
+    if (!client) return false;
+    const { error } = await client
         .from('settings')
         .upsert({ key: key, value: value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
     if (error) {
-        console.error('Error updating ad setting:', error);
+        console.error('Error setting setting:', error);
         return false;
     }
     return true;
+}
+
+async function getPrizePool() {
+    const val = await getSetting('current_pool');
+    return val ? parseFloat(val) : 45230;
+}
+
+async function updatePrizePool(amount) {
+    return await setSetting('current_pool', String(amount));
+}
+
+async function getAdminPassword() {
+    return await getSetting('admin_password') || '';
+}
+
+async function setAdminPassword(password) {
+    return await setSetting('admin_password', password);
+}
+
+async function getAdSetting(key) {
+    return await getSetting(key) || '';
+}
+
+async function updateAdSetting(key, value) {
+    return await setSetting(key, value);
+}
+
+// ===== BANNER & BOT FUNCTIONS =====
+async function getHomeBanner() {
+    return await getSetting('home_banner_code') || '';
+}
+
+async function setHomeBanner(code) {
+    return await setSetting('home_banner_code', code);
+}
+
+async function getBotEnabled() {
+    const val = await getSetting('bot_enabled');
+    return val === 'true';
+}
+
+async function setBotEnabled(enabled) {
+    return await setSetting('bot_enabled', enabled ? 'true' : 'false');
 }
 
 // Export functions globally
@@ -354,3 +321,9 @@ window.getAdminPassword = getAdminPassword;
 window.setAdminPassword = setAdminPassword;
 window.getAdSetting = getAdSetting;
 window.updateAdSetting = updateAdSetting;
+window.getHomeBanner = getHomeBanner;
+window.setHomeBanner = setHomeBanner;
+window.getBotEnabled = getBotEnabled;
+window.setBotEnabled = setBotEnabled;
+window.getSetting = getSetting;
+window.setSetting = setSetting;
