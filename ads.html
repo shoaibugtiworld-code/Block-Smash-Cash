@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Ad Settings - Block Smash Cash</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            background: #0a0a1a;
+            font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+            color: #fff;
+        }
+        #app {
+            max-width: 420px;
+            width: 100%;
+            height: 100dvh;
+            max-height: 100dvh;
+            margin: 0 auto;
+            background: #12122a;
+            border-radius: 0;
+            padding: 16px 16px 8px;
+            border: 1px solid #2a2a5a;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        @media (min-width: 421px) {
+            #app {
+                border-radius: 24px;
+                height: 90vh;
+                max-height: 740px;
+                margin-top: 20px;
+            }
+        }
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .content-area::-webkit-scrollbar { width: 3px; }
+        .content-area::-webkit-scrollbar-thumb { background: #2a2a5a; border-radius: 10px; }
+
+        .header {
+            text-align: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #2a2a5a;
+            flex-shrink: 0;
+        }
+        .header h1 {
+            font-size: 22px;
+            color: #00ddff;
+        }
+        .header p {
+            color: #8888bb;
+            font-size: 13px;
+        }
+
+        .ad-setting {
+            background: #1a1a3a;
+            border-radius: 14px;
+            padding: 14px;
+            border: 1px solid #2a2a5a;
+        }
+        .ad-setting .label {
+            font-size: 13px;
+            font-weight: 600;
+            color: #aaa;
+            margin-bottom: 4px;
+        }
+        .ad-setting .desc {
+            font-size: 11px;
+            color: #8888bb;
+            margin-bottom: 8px;
+        }
+        .ad-setting input {
+            width: 100%;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border: 2px solid #2a2a5a;
+            background: #0a0a1a;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+            margin-bottom: 6px;
+        }
+        .ad-setting input:focus {
+            border-color: #00ddff;
+        }
+        .ad-setting .save-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 10px;
+            background: #33aa55;
+            color: #fff;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .ad-setting .save-btn:active {
+            transform: scale(0.94);
+        }
+        .ad-setting .current-link {
+            font-size: 11px;
+            color: #88ccff;
+            word-break: break-all;
+            margin-top: 4px;
+            background: #0a0a1a;
+            padding: 6px 10px;
+            border-radius: 6px;
+        }
+
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            background: #1a1a3a;
+            border-radius: 16px;
+            padding: 6px 2px;
+            margin-top: 8px;
+            border: 1px solid #2a2a5a;
+            flex-shrink: 0;
+            width: 100%;
+            overflow-x: auto;
+            gap: 2px;
+        }
+        .bottom-nav a {
+            background: none;
+            border: none;
+            color: #8888bb;
+            font-size: 10px;
+            padding: 4px 6px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.25s;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+            min-width: 40px;
+            flex-shrink: 0;
+        }
+        .bottom-nav a .icon { font-size: 18px; line-height: 1; }
+        .bottom-nav a.active {
+            color: #00ddff;
+            background: rgba(0, 221, 255, 0.08);
+        }
+        .bottom-nav a:active { transform: scale(0.94); }
+
+        .toast-msg {
+            position: fixed;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a2a1a;
+            border: 1px solid #33aa55;
+            border-radius: 12px;
+            padding: 10px 20px;
+            color: #66ff88;
+            font-size: 14px;
+            font-weight: 500;
+            z-index: 1000;
+            max-width: 90%;
+            text-align: center;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+        .toast-msg.show { opacity: 1; }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div id="toastMsg" class="toast-msg"></div>
+
+    <div class="header">
+        <h1>📢 Ad Settings</h1>
+        <p>Manage all ad links in one place</p>
+    </div>
+
+    <div class="content-area">
+
+        <!-- Play Button Ad -->
+        <div class="ad-setting">
+            <div class="label">🎯 Play Button Ad</div>
+            <div class="desc">Shows when user clicks "PLAY NOW" on Home page</div>
+            <input type="text" id="playAdInput" placeholder="Enter ad link..." />
+            <button class="save-btn" onclick="saveAdLink('playAd')">Save</button>
+            <div class="current-link" id="playAdDisplay">Current: <span id="playAdCurrent">—</span></div>
+        </div>
+
+        <!-- Replay / Game Over Ad -->
+        <div class="ad-setting">
+            <div class="label">🔄 Replay / Game Over Ad</div>
+            <div class="desc">Shows when game ends (every 2-4 games)</div>
+            <input type="text" id="replayAdInput" placeholder="Enter ad link..." />
+            <button class="save-btn" onclick="saveAdLink('replayAd')">Save</button>
+            <div class="current-link" id="replayAdDisplay">Current: <span id="replayAdCurrent">—</span></div>
+        </div>
+
+        <!-- Reward Ad (2x/4x Score) -->
+        <div class="ad-setting">
+            <div class="label">💰 Reward Ad (2x/4x Score)</div>
+            <div class="desc">Shows when user wants to double their score</div>
+            <input type="text" id="rewardAdInput" placeholder="Enter ad link..." />
+            <button class="save-btn" onclick="saveAdLink('rewardAd')">Save</button>
+            <div class="current-link" id="rewardAdDisplay">Current: <span id="rewardAdCurrent">—</span></div>
+        </div>
+
+        <!-- Ad Frequency Settings -->
+        <div class="ad-setting" style="border-color: #ffd700;">
+            <div class="label">⚙️ Ad Frequency</div>
+            <div class="desc">How often ads appear (games played between ads)</div>
+            <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+                <input type="number" id="adFrequencyInput" placeholder="e.g. 3" style="width:80px;" min="1" max="10" />
+                <button class="save-btn" onclick="saveAdFrequency()" style="background:#ffd700;color:#000;">Save</button>
+            </div>
+            <div class="current-link">Current: Every <span id="adFrequencyDisplay">3</span> games</div>
+        </div>
+
+    </div>
+
+    <div class="bottom-nav">
+        <a href="index.html">🏠<span>Home</span></a>
+        <a href="admin.html">⚙️<span>Admin</span></a>
+        <a href="ads.html" class="active">📢<span>Ads</span></a>
+    </div>
+</div>
+
+<script>
+    // ================================================================
+    // AD SETTINGS - Save to localStorage
+    // ================================================================
+
+    const AD_KEYS = {
+        playAd: 'bs_ad_play',
+        replayAd: 'bs_ad_replay',
+        rewardAd: 'bs_ad_reward',
+        adFrequency: 'bs_ad_frequency'
+    };
+
+    const DEFAULT_LINKS = {
+        playAd: 'https://shrtslug.biz/8YSjH',
+        replayAd: 'https://shrtslug.biz/8YSjH',
+        rewardAd: 'https://shrtslug.biz/8YSjH',
+        adFrequency: 3
+    };
+
+    function showToast(msg) {
+        const el = document.getElementById('toastMsg');
+        el.textContent = msg;
+        el.classList.add('show');
+        clearTimeout(el._timeout);
+        el._timeout = setTimeout(() => { el.classList.remove('show'); }, 2500);
+    }
+
+    function getAdLink(key) {
+        return localStorage.getItem(key) || DEFAULT_LINKS[key] || '';
+    }
+
+    function saveAdLink(type) {
+        const inputMap = {
+            playAd: 'playAdInput',
+            replayAd: 'replayAdInput',
+            rewardAd: 'rewardAdInput'
+        };
+        const input = document.getElementById(inputMap[type]);
+        const value = input.value.trim();
+        if (!value) {
+            showToast('❌ Please enter a valid link.');
+            return;
+        }
+        localStorage.setItem(AD_KEYS[type], value);
+        loadSettings();
+        showToast('✅ ' + type + ' link saved!');
+    }
+
+    function saveAdFrequency() {
+        const input = document.getElementById('adFrequencyInput');
+        const value = parseInt(input.value);
+        if (!value || value < 1 || value > 10) {
+            showToast('❌ Please enter a number between 1 and 10.');
+            return;
+        }
+        localStorage.setItem(AD_KEYS.adFrequency, String(value));
+        loadSettings();
+        showToast('✅ Ad frequency saved!');
+    }
+
+    function loadSettings() {
+        // Load all ad links
+        const types = ['playAd', 'replayAd', 'rewardAd'];
+        types.forEach(type => {
+            const link = getAdLink(type);
+            const displayEl = document.getElementById(type + 'Current');
+            const inputEl = document.getElementById(type + 'Input');
+            if (displayEl) displayEl.textContent = link || 'Not set';
+            if (inputEl) inputEl.value = link || '';
+        });
+
+        // Load frequency
+        const freq = parseInt(localStorage.getItem(AD_KEYS.adFrequency)) || DEFAULT_LINKS.adFrequency;
+        document.getElementById('adFrequencyDisplay').textContent = freq;
+        document.getElementById('adFrequencyInput').value = freq;
+    }
+
+    // Load on page load
+    loadSettings();
+
+    // Also expose functions globally for onclick
+    window.saveAdLink = saveAdLink;
+    window.saveAdFrequency = saveAdFrequency;
+    window.getAdLink = getAdLink;
+</script>
+</body>
+</html>
