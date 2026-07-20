@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Block Smash Cash - Referral</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            background: #0a0a1a;
+            font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+            color: #fff;
+        }
+        #app {
+            max-width: 420px;
+            width: 100%;
+            height: 100dvh;
+            max-height: 100dvh;
+            margin: 0 auto;
+            background: #12122a;
+            border-radius: 0;
+            padding: 16px 16px 8px;
+            border: 1px solid #2a2a5a;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        @media (min-width: 421px) {
+            #app {
+                border-radius: 24px;
+                height: 90vh;
+                max-height: 740px;
+                margin-top: 20px;
+            }
+        }
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .content-area::-webkit-scrollbar { width: 3px; }
+        .content-area::-webkit-scrollbar-thumb { background: #2a2a5a; border-radius: 10px; }
+
+        .ref-header { text-align: center; padding: 6px 0 4px; flex-shrink: 0; }
+        .ref-header .icon { font-size: 48px; }
+        .ref-header h2 { font-size: 22px; color: #00ddff; font-weight: 700; }
+        .ref-header p { color: #8888bb; font-size: 13px; }
+
+        .ref-link-box {
+            background: #1a1a3a;
+            border-radius: 14px;
+            padding: 14px;
+            border: 1px solid #2a2a5a;
+            flex-shrink: 0;
+        }
+        .ref-link-box .link {
+            background: #0a0a1a;
+            padding: 12px 14px;
+            border-radius: 10px;
+            font-size: 13px;
+            color: #88ccff;
+            word-break: break-all;
+            border: 1px solid #2a2a5a;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+        .ref-link-box .link .copy-btn {
+            background: #2a2a5a;
+            border: none;
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: background 0.2s;
+        }
+        .ref-link-box .link .copy-btn:active { background: #00ddff; color: #000; }
+        .ref-link-box .share-btn {
+            width: 100%;
+            padding: 12px;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, #25D366, #128C7E);
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .ref-link-box .share-btn:active { transform: scale(0.96); }
+
+        .ref-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .ref-stats .s {
+            background: #1a1a3a;
+            border-radius: 12px;
+            padding: 10px;
+            text-align: center;
+            border: 1px solid #2a2a5a;
+        }
+        .ref-stats .s .num { font-size: 20px; font-weight: 700; color: #ffd700; }
+        .ref-stats .s .lbl { font-size: 9px; color: #8888bb; text-transform: uppercase; }
+
+        .ref-bonus-table {
+            background: #1a1a3a;
+            border-radius: 12px;
+            padding: 12px;
+            border: 1px solid #2a2a5a;
+            flex-shrink: 0;
+        }
+        .ref-bonus-table h3 { font-size: 14px; color: #ffd700; margin-bottom: 6px; text-align: center; }
+        .ref-bonus-table .row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid #1a1a2a;
+            font-size: 12px;
+            color: #aaa;
+        }
+        .ref-bonus-table .row:last-child { border-bottom: none; }
+        .ref-bonus-table .row .highlight { color: #ffd700; font-weight: 600; }
+        .ref-bonus-table .row .bonus { color: #66ff88; font-weight: 600; }
+        .ref-bonus-table .note {
+            font-size: 11px;
+            color: #8888bb;
+            text-align: center;
+            margin-top: 6px;
+            border-top: 1px solid #1a1a2a;
+            padding-top: 6px;
+        }
+
+        .ref-list {
+            background: #1a1a3a;
+            border-radius: 12px;
+            padding: 10px;
+            border: 1px solid #2a2a5a;
+            flex: 1;
+            min-height: 100px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .ref-list h3 { font-size: 13px; color: #aaa; margin-bottom: 4px; }
+        .ref-list .entry {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid #1a1a2a;
+            font-size: 12px;
+            color: #aaa;
+        }
+        .ref-list .entry .status.active { color: #66ff88; }
+        .ref-list .entry .status.inactive { color: #ff6644; }
+
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            background: #1a1a3a;
+            border-radius: 16px;
+            padding: 6px 2px;
+            margin-top: 8px;
+            border: 1px solid #2a2a5a;
+            flex-shrink: 0;
+            width: 100%;
+            overflow-x: auto;
+            gap: 2px;
+        }
+        .bottom-nav a {
+            background: none;
+            border: none;
+            color: #8888bb;
+            font-size: 10px;
+            padding: 4px 6px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.25s;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+            min-width: 40px;
+            flex-shrink: 0;
+        }
+        .bottom-nav a .icon { font-size: 18px; line-height: 1; }
+        .bottom-nav a.active {
+            color: #00ddff;
+            background: rgba(0, 221, 255, 0.08);
+        }
+        .bottom-nav a:active { transform: scale(0.94); }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="content-area">
+        <div class="ref-header">
+            <div class="icon">🔗</div>
+            <h2>REFERRAL</h2>
+            <p>Invite friends & earn bonus points</p>
+        </div>
+
+        <div class="ref-link-box">
+            <div class="link">
+                <span id="refLinkDisplay">Loading...</span>
+                <button class="copy-btn" id="copyBtn">📋 Copy</button>
+            </div>
+            <button class="share-btn" id="shareBtn">📤 SHARE</button>
+        </div>
+
+        <div class="ref-stats">
+            <div class="s"><div class="num" id="refTotal">0</div><div class="lbl">Total</div></div>
+            <div class="s"><div class="num" id="refActive">0</div><div class="lbl">Active</div></div>
+            <div class="s"><div class="num" id="refBonus">0%</div><div class="lbl">Bonus</div></div>
+        </div>
+
+        <div class="ref-bonus-table">
+            <h3>📊 BONUS TIERS</h3>
+            <div class="row"><span>Active Referrals</span><span>Score Bonus</span></div>
+            <div class="row"><span>5+</span><span class="bonus">+5%</span></div>
+            <div class="row"><span>25+</span><span class="bonus">+10%</span></div>
+            <div class="row"><span>50+</span><span class="bonus">+20%</span></div>
+            <div class="row"><span>100+</span><span class="bonus">+35%</span></div>
+            <div class="row"><span>250+</span><span class="bonus">+50%</span></div>
+            <div class="row"><span>500+</span><span class="bonus">+75%</span></div>
+            <div class="row"><span>1,000+</span><span class="bonus">+100%</span></div>
+            <div class="note">🚀 Every Active Referral increases your Score Bonus.<br>The more active friends you invite, the higher your final score.</div>
+        </div>
+
+        <div class="ref-list">
+            <h3>📋 Your Referrals</h3>
+            <div id="refListContainer">
+                <div style="color:#888;text-align:center;padding:10px;font-size:13px;">No referrals yet.</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-nav">
+        <a href="index.html">🏠<span>Home</span></a>
+        <a href="leaderboard.html">🏆<span>Top</span></a>
+        <a href="profile.html">👤<span>Profile</span></a>
+        <a href="referral.html" class="active">🔗<span>Referral</span></a>
+        <a href="admin.html" id="adminNavLink" style="display:none;">⚙️<span>Admin</span></a>
+    </div>
+</div>
+
+<script>
+    // ================================================================
+    // REFERRAL PAGE - LIVE DATA
+    // ================================================================
+
+    function getUsers() {
+        try { return JSON.parse(localStorage.getItem('bs_users')) || []; } catch(e) { return []; }
+    }
+    function getCurrentUser() {
+        const name = localStorage.getItem('bs_username');
+        if (!name) return null;
+        return getUsers().find(u => u.username === name) || null;
+    }
+    function getReferrals() {
+        try { return JSON.parse(localStorage.getItem('bs_referrals')) || []; } catch(e) { return []; }
+    }
+    function getBonusPercent(activeCount) {
+        if (activeCount >= 1000) return 100;
+        else if (activeCount >= 500) return 75;
+        else if (activeCount >= 250) return 50;
+        else if (activeCount >= 100) return 35;
+        else if (activeCount >= 50) return 20;
+        else if (activeCount >= 25) return 10;
+        else if (activeCount >= 10) return 5;
+        else if (activeCount >= 5) return 5;
+        else return 0;
+    }
+
+    function renderReferral() {
+        const user = getCurrentUser();
+        if (!user) {
+            document.getElementById('refLinkDisplay').textContent = 'Please login first.';
+            document.getElementById('refTotal').textContent = '0';
+            document.getElementById('refActive').textContent = '0';
+            document.getElementById('refBonus').textContent = '0%';
+            document.getElementById('refListContainer').innerHTML = '<div style="color:#888;text-align:center;padding:10px;font-size:13px;">Login to see your referrals.</div>';
+            return;
+        }
+
+        const baseUrl = window.location.origin + window.location.pathname.replace('referral.html', 'index.html');
+        const refLink = baseUrl + '?ref=' + encodeURIComponent(user.username);
+        document.getElementById('refLinkDisplay').textContent = refLink;
+
+        const allRefs = getReferrals();
+        const myRefs = allRefs.filter(r => r.referrer === user.username);
+        const total = myRefs.length;
+        const active = myRefs.filter(r => r.active === true).length;
+        const bonus = getBonusPercent(active);
+
+        document.getElementById('refTotal').textContent = total;
+        document.getElementById('refActive').textContent = active;
+        document.getElementById('refBonus').textContent = bonus + '%';
+
+        const container = document.getElementById('refListContainer');
+        if (myRefs.length === 0) {
+            container.innerHTML = '<div style="color:#888;text-align:center;padding:10px;font-size:13px;">No referrals yet. Share your link!</div>';
+        } else {
+            let html = '';
+            myRefs.slice(0, 50).forEach((r, i) => {
+                const displayName = r.referee.length > 6 ? r.referee.slice(0, 4) + '***' : r.referee;
+                const statusClass = r.active ? 'active' : 'inactive';
+                const statusText = r.active ? '✅ Active' : '⏳ Pending';
+                html += `
+                    <div class="entry">
+                        <span>#${i+1} ${displayName}</span>
+                        <span class="status ${statusClass}">${statusText}</span>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+    }
+
+    document.getElementById('copyBtn').addEventListener('click', function() {
+        const link = document.getElementById('refLinkDisplay').textContent;
+        if (!link || link === 'Loading...' || link === 'Please login first.') {
+            alert('Please login to get your referral link.');
+            return;
+        }
+        navigator.clipboard.writeText(link).then(() => {
+            this.textContent = '✅ Copied!';
+            setTimeout(() => { this.textContent = '📋 Copy'; }, 2000);
+        }).catch(() => {
+            const textArea = document.createElement('textarea');
+            textArea.value = link;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand('copy');
+            document.body.removeChild(textArea);
+            this.textContent = '✅ Copied!';
+            setTimeout(() => { this.textContent = '📋 Copy'; }, 2000);
+        });
+    });
+
+    document.getElementById('shareBtn').addEventListener('click', function() {
+        const link = document.getElementById('refLinkDisplay').textContent;
+        if (!link || link === 'Loading...' || link === 'Please login first.') {
+            alert('Please login to share your referral link.');
+            return;
+        }
+        const text = '🎮 Join Block Smash Cash and earn real rewards!\nUse my referral link:\n' + link + '\n\nThe more active friends you invite, the higher your bonus!';
+        if (navigator.share) {
+            navigator.share({ title: 'Block Smash Cash', text: text, url: link }).catch(() => {});
+        } else {
+            navigator.clipboard.writeText(text).then(() => {
+                alert('📤 Referral link copied to clipboard! Share it with your friends.');
+            }).catch(() => {
+                alert('📤 Share this link: ' + link);
+            });
+        }
+    });
+
+    if (window.location.search.includes('admin=true')) {
+        document.getElementById('adminNavLink').style.display = 'flex';
+    }
+
+    renderReferral();
+    setInterval(renderReferral, 60000);
+</script>
+</body>
+</html>
