@@ -5,7 +5,6 @@
 const SUPABASE_URL = 'https://qwcfcqkgbwzabsjvkrse.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3Y2ZjcWtnYnd6YWJzanZrcnNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1Mzk0NzIsImV4cCI6MjEwMDExNTQ3Mn0.mlC1lCjD8xhKnMP5YX4fxbehuwoH6KkfO6OtEgiGgnM';
 
-// Initialize Supabase client (will be set after library loads)
 let supabaseClient = null;
 
 function getSupabase() {
@@ -33,14 +32,15 @@ function getSupabase() {
 async function getUser(username) {
     const client = getSupabase();
     if (!client) return null;
-    // ✅ FIX 1: Username کو normalize کریں (چھوٹے حروف + trim)
+    // ✅ FIX: Case-insensitive search using ilike
+    // Normalize for consistency (lowercase)
     const normalized = username.trim().toLowerCase();
     const { data, error } = await client
         .from('users')
         .select('*')
-        .eq('username', normalized)
-        .single();
-    if (error && error.code !== 'PGRST116') {
+        .ilike('username', normalized)  // ilike is case-insensitive
+        .maybeSingle();  // returns null if no match, instead of error
+    if (error) {
         console.error('Error fetching user:', error);
         return null;
     }
@@ -50,7 +50,7 @@ async function getUser(username) {
 async function createUser(username, userId, referredBy) {
     const client = getSupabase();
     if (!client) return null;
-    // ✅ FIX 2: نیا صارف بناتے وقت بھی Username کو normalize کریں
+    // Always store username in lowercase
     const normalized = username.trim().toLowerCase();
     const { data, error } = await client
         .from('users')
@@ -74,20 +74,15 @@ async function createUser(username, userId, referredBy) {
     return data;
 }
 
+// باقی تمام فنکشنز ویسے ہی ہیں (کوئی تبدیلی نہیں)
 async function updateUserStats(username, points, games, wins) {
     const client = getSupabase();
     if (!client) return;
     const { error } = await client
         .from('users')
-        .update({
-            total_points: points,
-            total_games: games,
-            total_wins: wins
-        })
+        .update({ total_points: points, total_games: games, total_wins: wins })
         .eq('username', username);
-    if (error) {
-        console.error('Error updating stats:', error);
-    }
+    if (error) console.error('Error updating stats:', error);
 }
 
 async function updateUserBalance(username, balance, availableBalance) {
@@ -95,14 +90,9 @@ async function updateUserBalance(username, balance, availableBalance) {
     if (!client) return;
     const { error } = await client
         .from('users')
-        .update({
-            balance: balance,
-            available_balance: availableBalance
-        })
+        .update({ balance: balance, available_balance: availableBalance })
         .eq('username', username);
-    if (error) {
-        console.error('Error updating balance:', error);
-    }
+    if (error) console.error('Error updating balance:', error);
 }
 
 async function getAllUsers() {
@@ -136,7 +126,6 @@ async function deleteUser(username) {
 // ================================================================
 // REFERRAL FUNCTIONS
 // ================================================================
-
 async function getReferrals(referrer) {
     const client = getSupabase();
     if (!client) return [];
@@ -156,15 +145,8 @@ async function addReferral(referrer, referee) {
     if (!client) return;
     const { error } = await client
         .from('referrals')
-        .insert([{
-            referrer: referrer,
-            referee: referee,
-            active: false,
-            date: new Date().toISOString()
-        }]);
-    if (error) {
-        console.error('Error adding referral:', error);
-    }
+        .insert([{ referrer, referee, active: false, date: new Date().toISOString() }]);
+    if (error) console.error('Error adding referral:', error);
 }
 
 async function activateReferral(referee) {
@@ -174,9 +156,7 @@ async function activateReferral(referee) {
         .from('referrals')
         .update({ active: true })
         .eq('referee', referee);
-    if (error) {
-        console.error('Error activating referral:', error);
-    }
+    if (error) console.error('Error activating referral:', error);
 }
 
 async function getAllReferrals() {
@@ -195,7 +175,6 @@ async function getAllReferrals() {
 // ================================================================
 // WITHDRAWAL FUNCTIONS
 // ================================================================
-
 async function getWithdrawals(username) {
     const client = getSupabase();
     if (!client) return [];
@@ -216,14 +195,7 @@ async function createWithdrawal(txn, username, account, amount) {
     if (!client) return false;
     const { error } = await client
         .from('withdrawals')
-        .insert([{
-            txn: txn,
-            username: username,
-            account: account,
-            amount: amount,
-            status: 'pending',
-            date: new Date().toISOString()
-        }]);
+        .insert([{ txn, username, account, amount, status: 'pending', date: new Date().toISOString() }]);
     if (error) {
         console.error('Error creating withdrawal:', error);
         return false;
@@ -234,7 +206,7 @@ async function createWithdrawal(txn, username, account, amount) {
 async function updateWithdrawalStatus(txn, status, txnId) {
     const client = getSupabase();
     if (!client) return false;
-    const updateData = { status: status };
+    const updateData = { status };
     if (txnId) updateData.txn_id = txnId;
     const { error } = await client
         .from('withdrawals')
@@ -279,7 +251,6 @@ async function getAllWithdrawals() {
 // ================================================================
 // SETTINGS FUNCTIONS
 // ================================================================
-
 async function getSetting(key) {
     const client = getSupabase();
     if (!client) return null;
@@ -288,9 +259,7 @@ async function getSetting(key) {
         .select('value')
         .eq('key', key)
         .single();
-    if (error) {
-        return null;
-    }
+    if (error) return null;
     return data ? data.value : null;
 }
 
@@ -299,7 +268,7 @@ async function setSetting(key, value) {
     if (!client) return false;
     const { error } = await client
         .from('settings')
-        .upsert({ key: key, value: value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
+        .upsert({ key, value, updated_at: new Date().toISOString() }, { onConflict: 'key' });
     if (error) {
         console.error('Error setting setting:', error);
         return false;
@@ -319,7 +288,6 @@ async function updatePrizePool(amount) {
 // ================================================================
 // ADMIN PASSWORD FUNCTIONS
 // ================================================================
-
 async function getAdminPassword() {
     return await getSetting('admin_password') || '';
 }
@@ -328,16 +296,13 @@ async function setAdminPassword(password) {
     return await setSetting('admin_password', password);
 }
 
-// ✅ FIX 3: changeAdminPassword میں trim() کا استعمال
 async function changeAdminPassword(currentPassword, newPassword) {
     const current = await getAdminPassword();
     if (current && current.trim() !== currentPassword.trim()) {
         return { success: false, error: 'Current password is incorrect.' };
     }
     const success = await setAdminPassword(newPassword);
-    if (success) {
-        return { success: true, error: null };
-    }
+    if (success) return { success: true, error: null };
     return { success: false, error: 'Failed to update password.' };
 }
 
@@ -363,16 +328,13 @@ async function resetAdminPassword(securityAnswer, newPassword) {
         return { success: false, error: 'Incorrect security answer.' };
     }
     const success = await setAdminPassword(newPassword);
-    if (success) {
-        return { success: true, error: null };
-    }
+    if (success) return { success: true, error: null };
     return { success: false, error: 'Failed to reset password.' };
 }
 
 // ================================================================
 // AD SETTINGS FUNCTIONS
 // ================================================================
-
 async function getAdSetting(key) {
     return await getSetting(key) || '';
 }
@@ -384,7 +346,6 @@ async function updateAdSetting(key, value) {
 // ================================================================
 // BANNER FUNCTIONS
 // ================================================================
-
 async function getHomeBanner() {
     return await getSetting('home_banner_code') || '';
 }
@@ -396,7 +357,6 @@ async function setHomeBanner(code) {
 // ================================================================
 // BOT FUNCTIONS
 // ================================================================
-
 async function getBotEnabled() {
     const val = await getSetting('bot_enabled');
     return val === 'true';
@@ -409,7 +369,6 @@ async function setBotEnabled(enabled) {
 // ================================================================
 // EXPORT FUNCTIONS TO GLOBAL SCOPE
 // ================================================================
-
 window.getUser = getUser;
 window.createUser = createUser;
 window.updateUserStats = updateUserStats;
@@ -442,4 +401,4 @@ window.setBotEnabled = setBotEnabled;
 window.getSetting = getSetting;
 window.setSetting = setSetting;
 
-console.log('✅ Supabase.js loaded successfully (FIXED VERSION)!');
+console.log('✅ Supabase.js loaded successfully (FIXED with ilike)!');
