@@ -4,7 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Block Smash Cash - Home</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <script src="supabase.js"></script>
     <style>
+        /* === SAME STYLES AS BEFORE === */
         * {
             margin: 0;
             padding: 0;
@@ -237,30 +240,36 @@
 </div>
 <script>
     // ================================================================
-    // INDEX.HTML - HOME PAGE WITH LOGIN CHECK
+    // HOME PAGE - WITH SUPABASE
     // ================================================================
 
-    // --- CHECK IF USER IS LOGGED IN ---
-    (function() {
+    // --- CHECK LOGIN ---
+    (async function() {
         const username = localStorage.getItem('bs_username');
         if (!username) {
             window.location.href = 'login.html';
             return;
         }
+
+        // Check if user exists in Supabase
+        const user = await window.getUser(username);
+        if (!user) {
+            // User not found in Supabase, logout
+            localStorage.removeItem('bs_username');
+            window.location.href = 'login.html';
+            return;
+        }
+
+        // User is valid, continue
+        renderHome();
     })();
 
-    // --- DATA HELPERS ---
-    function getUsers() {
-        try { return JSON.parse(localStorage.getItem('bs_users')) || []; } catch(e) { return []; }
-    }
-    function getPool() {
-        return parseFloat(localStorage.getItem('bs_current_pool')) || 45230;
-    }
-    function getAdLink(key) {
-        return localStorage.getItem(key) || '';
+    // --- HELPERS ---
+    async function getPool() {
+        return await window.getPrizePool();
     }
 
-    // --- PHASES (100 ➜ 150 ➜ 200 ➜ 250 ➜ 500) ---
+    // --- PHASES ---
     function getPhase(count) {
         const phases = [100, 150, 200, 250, 500];
         let idx = 0;
@@ -290,8 +299,6 @@
         }
         return arrow;
     }
-
-    // --- UPDATED: Withdrawal date changed to 25th ---
     function getNextWithdrawalDate() {
         const d = new Date();
         let month = d.getMonth(), year = d.getFullYear(), day = 25;
@@ -300,10 +307,12 @@
         return day + ' ' + months[month] + ' ' + year;
     }
 
-    function renderHome() {
-        const users = getUsers();
-        const pool = getPool();
+    async function renderHome() {
+        // Get users count from Supabase
+        const users = await window.getAllUsers();
         const count = users.length;
+        const pool = await getPool();
+
         document.getElementById('homePlayers').textContent = count;
         document.getElementById('homePool').textContent = '₨ ' + pool.toFixed(0);
         document.getElementById('homeWinners').textContent = Math.min(count, 500);
@@ -314,23 +323,34 @@
         document.getElementById('phaseArrow').textContent = getPhaseArrow(count);
     }
 
-    // ===== PLAY BUTTON WITH AD =====
+    // --- PLAY BUTTON (with Ad) ---
     document.getElementById('homePlayBtn').addEventListener('click', function() {
-        if (typeof showPlayButtonAd === 'function') {
-            showPlayButtonAd(function() {
+        // Check ad link from Supabase
+        window.getAdSetting('ad_play').then(adLink => {
+            if (adLink) {
+                window.open(adLink, '_blank');
+            }
+            setTimeout(() => {
                 window.location.href = 'game.html';
-            });
-        } else {
-            window.location.href = 'game.html';
-        }
+            }, 500);
+        }).catch(() => {
+            // Fallback
+            setTimeout(() => {
+                window.location.href = 'game.html';
+            }, 500);
+        });
     });
 
+    // --- ADMIN LINK ---
     if (window.location.search.includes('admin=true')) {
         document.getElementById('adminNavLink').style.display = 'flex';
     }
 
-    renderHome();
+    // --- AUTO REFRESH ---
     setInterval(renderHome, 60000);
+
+    // Initial render
+    renderHome();
 </script>
 </body>
 </html>
