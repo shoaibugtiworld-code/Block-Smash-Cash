@@ -1,22 +1,36 @@
+<!-- ============================================================ -->
+<!-- FILE: supabase.js (COMPLETE - FIXED)                         -->
+<!-- ============================================================ -->
+<script>
 // ================================================================
 // FILE: supabase.js - Database Connection & Functions
+// FIXED: Retry logic if supabase is not loaded yet
 // ================================================================
 
 const SUPABASE_URL = 'https://qwcfcqkgbwzabsjvkrse.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3Y2ZjcWtnYnd6YWJzanZrcnNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1Mzk0NzIsImV4cCI6MjEwMDExNTQ3Mn0.mlC1lCjD8xhKnMP5YX4fxbehuwoH6KkfO6OtEgiGgnM';
 
-// Initialize Supabase client
 let supabaseClient = null;
+let supabaseReady = false;
 
 function getSupabase() {
-    if (!supabaseClient) {
+    if (supabaseClient) return supabaseClient;
+    
+    if (typeof supabase !== 'undefined') {
+        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        supabaseReady = true;
+        return supabaseClient;
+    }
+    
+    // Retry after 100ms if supabase not loaded yet
+    setTimeout(() => {
         if (typeof supabase !== 'undefined') {
             supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        } else {
-            console.error('Supabase library not loaded');
+            supabaseReady = true;
         }
-    }
-    return supabaseClient;
+    }, 100);
+    
+    return null;
 }
 
 // ================================================================
@@ -305,10 +319,6 @@ async function updatePrizePool(amount) {
     return await setSetting('current_pool', String(amount));
 }
 
-// ================================================================
-// ADMIN PASSWORD FUNCTIONS
-// ================================================================
-
 async function getAdminPassword() {
     return await getSetting('admin_password') || '';
 }
@@ -317,7 +327,6 @@ async function setAdminPassword(password) {
     return await setSetting('admin_password', password);
 }
 
-// === NEW: Change Admin Password (requires current password) ===
 async function changeAdminPassword(currentPassword, newPassword) {
     const current = await getAdminPassword();
     if (current && current !== currentPassword) {
@@ -330,8 +339,6 @@ async function changeAdminPassword(currentPassword, newPassword) {
     return { success: false, error: 'Failed to update password.' };
 }
 
-// === NEW: Reset Admin Password (forgot password - requires security answer) ===
-// We'll store a security question and answer in settings
 async function getSecurityQuestion() {
     return await getSetting('security_question') || 'What is your favorite color?';
 }
@@ -360,10 +367,6 @@ async function resetAdminPassword(securityAnswer, newPassword) {
     return { success: false, error: 'Failed to reset password.' };
 }
 
-// ================================================================
-// AD SETTINGS FUNCTIONS
-// ================================================================
-
 async function getAdSetting(key) {
     return await getSetting(key) || '';
 }
@@ -372,10 +375,6 @@ async function updateAdSetting(key, value) {
     return await setSetting(key, value);
 }
 
-// ================================================================
-// BANNER FUNCTIONS
-// ================================================================
-
 async function getHomeBanner() {
     return await getSetting('home_banner_code') || '';
 }
@@ -383,10 +382,6 @@ async function getHomeBanner() {
 async function setHomeBanner(code) {
     return await setSetting('home_banner_code', code);
 }
-
-// ================================================================
-// BOT FUNCTIONS
-// ================================================================
 
 async function getBotEnabled() {
     const val = await getSetting('bot_enabled');
@@ -433,4 +428,5 @@ window.setBotEnabled = setBotEnabled;
 window.getSetting = getSetting;
 window.setSetting = setSetting;
 
-console.log('✅ Supabase.js loaded successfully!');
+console.log('✅ Supabase.js loaded successfully! Supabase ready:', supabaseReady);
+</script>
