@@ -234,7 +234,7 @@
         <div class="phase-box">
             <div class="phase-title" id="phaseTitle">🏆 Phase 1 – 100 Winners</div>
             <div class="phase-desc" id="phaseDesc">Next: 150 Winners</div>
-            <div class="phase-date" id="phaseDate">📅 Next Withdrawal: 25 July 2026</div>
+            <div class="phase-date" id="phaseDate">📅 Next Withdrawal: 30 July 2026</div>
             <div class="phase-arrow" id="phaseArrow">➡️ 100 ➜ 150 ➜ 200 ➜ 250 ➜ 500</div>
         </div>
 
@@ -263,7 +263,11 @@
 <script>
     // ================================================================
     // HOME PAGE - WITH SUPABASE
+    // Vercel Clean URL | 30th July 2026
     // ================================================================
+
+    // --- Vercel Base URL (Clean, no GitHub name) ---
+    const BASE_URL = 'https://block-smash-cash.vercel.app';
 
     // --- BOT VERIFICATION CHECK (every 3 hours) ---
     function checkBotVerification() {
@@ -273,7 +277,7 @@
 
         if (!verified || (Date.now() - timestamp) >= threeHours) {
             const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-            window.location.href = 'bot.html?return=' + encodeURIComponent(currentPage);
+            window.location.href = BASE_URL + '/bot.html?return=' + encodeURIComponent(currentPage);
         }
     }
 
@@ -287,14 +291,14 @@
     (async function() {
         const username = localStorage.getItem('bs_username');
         if (!username) {
-            window.location.href = 'login.html';
+            window.location.href = BASE_URL + '/login.html';
             return;
         }
 
         const user = await window.getUser(username);
         if (!user) {
             localStorage.removeItem('bs_username');
-            window.location.href = 'login.html';
+            window.location.href = BASE_URL + '/login.html';
             return;
         }
 
@@ -332,21 +336,23 @@
         }
         return arrow;
     }
+
+    // --- UPDATED: Withdrawal date changed to 30th ---
     function getNextWithdrawalDate() {
         const d = new Date();
-        let month = d.getMonth(), year = d.getFullYear(), day = 25;
-        if (d.getDate() > 25) { month++; if (month > 11) { month = 0; year++; } }
+        let month = d.getMonth(), year = d.getFullYear(), day = 30;
+        if (d.getDate() > 30) { month++; if (month > 11) { month = 0; year++; } }
         const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
         return day + ' ' + months[month] + ' ' + year;
     }
 
     async function renderHome() {
         const users = await window.getAllUsers();
-        const count = users.length;
+        const count = users ? users.length : 0;
         const pool = await window.getPrizePool();
 
         document.getElementById('homePlayers').textContent = count;
-        document.getElementById('homePool').textContent = '₨ ' + pool.toFixed(0);
+        document.getElementById('homePool').textContent = '₨ ' + (pool || 0).toFixed(0);
         document.getElementById('homeWinners').textContent = Math.min(count, 500);
         document.getElementById('phaseTitle').textContent = '🏆 Phase ' + (getPhase(count)+1) + ' – ' + getPhaseLabel(count);
         const next = getNextPhase(count);
@@ -375,11 +381,11 @@
                 window.open(adLink, '_blank');
             }
             setTimeout(() => {
-                window.location.href = 'game.html';
+                window.location.href = BASE_URL + '/game.html';
             }, 500);
         }).catch(() => {
             setTimeout(() => {
-                window.location.href = 'game.html';
+                window.location.href = BASE_URL + '/game.html';
             }, 500);
         });
     });
