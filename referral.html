@@ -4,9 +4,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Block Smash Cash - Referral</title>
+    <!-- پہلے Supabase لائبریری -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <!-- پھر supabase.js -->
     <script src="supabase.js"></script>
     <style>
+        /* === REFERRAL STYLES (SAME AS BEFORE) === */
         * {
             margin: 0;
             padding: 0;
@@ -36,12 +39,7 @@
             overflow: hidden;
         }
         @media (min-width: 421px) {
-            #app {
-                border-radius: 24px;
-                height: 90vh;
-                max-height: 740px;
-                margin-top: 20px;
-            }
+            #app { border-radius: 24px; height: 90vh; max-height: 740px; margin-top: 20px; }
         }
         .content-area {
             flex: 1;
@@ -60,15 +58,8 @@
             flex-shrink: 0;
         }
         .ref-header .icon { font-size: 48px; }
-        .ref-header h2 {
-            font-size: 22px;
-            color: #00ddff;
-            font-weight: 700;
-        }
-        .ref-header p {
-            color: #8888bb;
-            font-size: 13px;
-        }
+        .ref-header h2 { font-size: 22px; color: #00ddff; font-weight: 700; }
+        .ref-header p { color: #8888bb; font-size: 13px; }
 
         .ref-link-box {
             background: #1a1a3a;
@@ -131,16 +122,8 @@
             text-align: center;
             border: 1px solid #2a2a5a;
         }
-        .ref-stats .s .num {
-            font-size: 20px;
-            font-weight: 700;
-            color: #ffd700;
-        }
-        .ref-stats .s .lbl {
-            font-size: 9px;
-            color: #8888bb;
-            text-transform: uppercase;
-        }
+        .ref-stats .s .num { font-size: 20px; font-weight: 700; color: #ffd700; }
+        .ref-stats .s .lbl { font-size: 9px; color: #8888bb; text-transform: uppercase; }
 
         .ref-bonus-table {
             background: #1a1a3a;
@@ -149,12 +132,7 @@
             border: 1px solid #2a2a5a;
             flex-shrink: 0;
         }
-        .ref-bonus-table h3 {
-            font-size: 14px;
-            color: #ffd700;
-            margin-bottom: 6px;
-            text-align: center;
-        }
+        .ref-bonus-table h3 { font-size: 14px; color: #ffd700; margin-bottom: 6px; text-align: center; }
         .ref-bonus-table .row {
             display: flex;
             justify-content: space-between;
@@ -185,11 +163,7 @@
             max-height: 200px;
             overflow-y: auto;
         }
-        .ref-list h3 {
-            font-size: 13px;
-            color: #aaa;
-            margin-bottom: 4px;
-        }
+        .ref-list h3 { font-size: 13px; color: #aaa; margin-bottom: 4px; }
         .ref-list .entry {
             display: flex;
             justify-content: space-between;
@@ -322,24 +296,20 @@
 <script>
     // ================================================================
     // REFERRAL - WITH SUPABASE
-    // Vercel Clean URL | No GitHub username
     // ================================================================
 
-    // --- Vercel Base URL (Clean, no GitHub name) ---
     const BASE_URL = 'https://block-smash-cash.vercel.app';
 
-    // --- BOT VERIFICATION CHECK (every 3 hours) ---
+    // --- BOT VERIFICATION ---
     function checkBotVerification() {
         const verified = localStorage.getItem('bs_bot_verified') === 'true';
         const timestamp = parseInt(localStorage.getItem('bs_bot_timestamp') || '0');
         const threeHours = 3 * 60 * 60 * 1000;
 
         if (!verified || (Date.now() - timestamp) >= threeHours) {
-            const currentPage = 'referral.html';
-            window.location.href = BASE_URL + '/bot.html?return=' + encodeURIComponent(currentPage);
+            window.location.href = BASE_URL + '/bot.html?return=referral.html';
         }
     }
-
     checkBotVerification();
     setInterval(checkBotVerification, 5 * 60 * 1000);
 
@@ -350,21 +320,14 @@
             window.location.href = BASE_URL + '/login.html';
             return;
         }
-
         const user = await window.getUser(username);
         if (!user) {
             localStorage.removeItem('bs_username');
             window.location.href = BASE_URL + '/login.html';
             return;
         }
-
-        // User is valid, render referral
         renderReferral();
     })();
-
-    // ================================================================
-    // REFERRAL FUNCTIONS
-    // ================================================================
 
     function getBonusPercent(activeCount) {
         if (activeCount >= 1000) return 100;
@@ -398,11 +361,9 @@
                 return;
             }
 
-            // Generate referral link (Vercel clean URL)
             const refLink = BASE_URL + '/?ref=' + encodeURIComponent(username);
             document.getElementById('refLinkDisplay').textContent = refLink;
 
-            // Get referrals from Supabase
             const referrals = await window.getReferrals(username);
             const total = referrals ? referrals.length : 0;
             const active = referrals ? referrals.filter(r => r.active === true).length : 0;
@@ -412,7 +373,6 @@
             document.getElementById('refActive').textContent = active;
             document.getElementById('refBonus').textContent = bonus + '%';
 
-            // Render referral list
             const container = document.getElementById('refListContainer');
             if (!referrals || referrals.length === 0) {
                 container.innerHTML = '<div style="color:#888;text-align:center;padding:10px;font-size:13px;">No referrals yet. Share your link!</div>';
@@ -431,16 +391,12 @@
                 });
                 container.innerHTML = html;
             }
-
         } catch (error) {
             console.error('Error rendering referral:', error);
             showToast('Error loading referral data.', true);
         }
     }
 
-    // ================================================================
-    // COPY LINK
-    // ================================================================
     document.getElementById('copyBtn').addEventListener('click', function() {
         const link = document.getElementById('refLinkDisplay').textContent;
         if (!link || link === 'Loading...' || link === 'Please login first.') {
@@ -451,7 +407,6 @@
             this.textContent = '✅ Copied!';
             setTimeout(() => { this.textContent = '📋 Copy'; }, 2000);
         }).catch(() => {
-            // Fallback
             const textArea = document.createElement('textarea');
             textArea.value = link;
             document.body.appendChild(textArea);
@@ -463,9 +418,6 @@
         });
     });
 
-    // ================================================================
-    // SHARE LINK
-    // ================================================================
     document.getElementById('shareBtn').addEventListener('click', function() {
         const link = document.getElementById('refLinkDisplay').textContent;
         if (!link || link === 'Loading...' || link === 'Please login first.') {
@@ -484,16 +436,10 @@
         }
     });
 
-    // ================================================================
-    // ADMIN NAV
-    // ================================================================
     if (window.location.search.includes('admin=true')) {
         document.getElementById('adminNavLink').style.display = 'flex';
     }
 
-    // ================================================================
-    // AUTO REFRESH
-    // ================================================================
     setInterval(renderReferral, 60000);
 </script>
 </body>
