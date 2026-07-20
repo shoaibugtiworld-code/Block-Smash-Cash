@@ -1,3 +1,6 @@
+<!-- ============================================================ -->
+<!-- FILE: profile.html (COMPLETE - FIXED SCRIPT ORDER)          -->
+<!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,257 +10,67 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="supabase.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-        html, body {
-            height: 100%;
-            overflow: hidden;
-            background: #0a0a1a;
-            font-family: 'Segoe UI', system-ui, Arial, sans-serif;
-            color: #fff;
-        }
-        #app {
-            max-width: 420px;
-            width: 100%;
-            height: 100dvh;
-            max-height: 100dvh;
-            margin: 0 auto;
-            background: #12122a;
-            border-radius: 0;
-            padding: 16px 16px 8px;
-            border: 1px solid #2a2a5a;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        @media (min-width: 421px) {
-            #app {
-                border-radius: 24px;
-                height: 90vh;
-                max-height: 740px;
-                margin-top: 20px;
-            }
-        }
-        .content-area {
-            flex: 1;
-            overflow-y: auto;
-            padding-right: 4px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-        .content-area::-webkit-scrollbar { width: 3px; }
-        .content-area::-webkit-scrollbar-thumb { background: #2a2a5a; border-radius: 10px; }
+        * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+        html, body { height:100%; overflow:hidden; background:#0a0a1a; font-family:'Segoe UI', system-ui, Arial, sans-serif; color:#fff; }
+        #app { max-width:420px; width:100%; height:100dvh; max-height:100dvh; margin:0 auto; background:#12122a; border-radius:0; padding:16px 16px 8px; border:1px solid #2a2a5a; box-shadow:0 20px 60px rgba(0,0,0,0.8); display:flex; flex-direction:column; overflow:hidden; }
+        @media (min-width:421px) { #app { border-radius:24px; height:90vh; max-height:740px; margin-top:20px; } }
+        .content-area { flex:1; overflow-y:auto; padding-right:4px; display:flex; flex-direction:column; gap:8px; }
+        .content-area::-webkit-scrollbar { width:3px; }
+        .content-area::-webkit-scrollbar-thumb { background:#2a2a5a; border-radius:10px; }
 
-        .profile-header { text-align: center; padding: 4px 0 6px; flex-shrink: 0; }
-        .profile-header .username { font-size: 24px; font-weight: 700; color: #00ddff; }
-        .profile-header .uid { font-size: 12px; color: #8888bb; margin-top: 2px; }
-        .profile-header .rank-badge {
-            display: inline-block;
-            margin-top: 4px;
-            background: #1a1a3a;
-            padding: 4px 16px;
-            border-radius: 20px;
-            font-size: 14px;
-            color: #ffd700;
-            border: 1px solid #2a2a5a;
-        }
+        .profile-header { text-align:center; padding:4px 0 6px; flex-shrink:0; }
+        .profile-header .username { font-size:24px; font-weight:700; color:#00ddff; }
+        .profile-header .uid { font-size:12px; color:#8888bb; margin-top:2px; }
+        .profile-header .rank-badge { display:inline-block; margin-top:4px; background:#1a1a3a; padding:4px 16px; border-radius:20px; font-size:14px; color:#ffd700; border:1px solid #2a2a5a; }
 
-        .profile-stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 6px;
-            flex-shrink: 0;
-        }
-        .profile-stats .s {
-            background: #1a1a3a;
-            border-radius: 10px;
-            padding: 8px 4px;
-            text-align: center;
-            border: 1px solid #2a2a5a;
-        }
-        .profile-stats .s .num { font-size: 18px; font-weight: 700; color: #ffd700; }
-        .profile-stats .s .lbl { font-size: 9px; color: #8888bb; text-transform: uppercase; }
+        .profile-stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:6px; flex-shrink:0; }
+        .profile-stats .s { background:#1a1a3a; border-radius:10px; padding:8px 4px; text-align:center; border:1px solid #2a2a5a; }
+        .profile-stats .s .num { font-size:18px; font-weight:700; color:#ffd700; }
+        .profile-stats .s .lbl { font-size:9px; color:#8888bb; text-transform:uppercase; }
 
-        .balance-box {
-            background: linear-gradient(135deg, #1a2a3a, #0a1a2a);
-            border: 1px solid #2a5a7a;
-            border-radius: 14px;
-            padding: 12px 14px;
-            text-align: center;
-            flex-shrink: 0;
-        }
-        .balance-box .amount { font-size: 28px; font-weight: 700; color: #ffd700; }
-        .balance-box .label { font-size: 11px; color: #8888bb; }
-        .balance-box .next-date { font-size: 11px; color: #66ff88; margin-top: 2px; }
+        .balance-box { background:linear-gradient(135deg,#1a2a3a,#0a1a2a); border:1px solid #2a5a7a; border-radius:14px; padding:12px 14px; text-align:center; flex-shrink:0; }
+        .balance-box .amount { font-size:28px; font-weight:700; color:#ffd700; }
+        .balance-box .label { font-size:11px; color:#8888bb; }
+        .balance-box .next-date { font-size:11px; color:#66ff88; margin-top:2px; }
 
-        .profile-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 6px;
-            flex-shrink: 0;
-        }
-        .profile-actions .btn {
-            width: 100%;
-            padding: 12px;
-            border: none;
-            border-radius: 12px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.15s;
-            text-align: center;
-        }
-        .profile-actions .btn:active { transform: scale(0.96); }
-        .btn-withdraw { background: linear-gradient(135deg, #ffd700, #ffaa00); color: #000; }
-        .btn-invite { background: linear-gradient(135deg, #25D366, #128C7E); color: #fff; }
-        .btn-logout { background: #2a1a1a; border: 1px solid #ff4444; color: #ff4444; }
+        .profile-actions { display:flex; flex-direction:column; gap:6px; flex-shrink:0; }
+        .profile-actions .btn { width:100%; padding:12px; border:none; border-radius:12px; font-size:15px; font-weight:600; cursor:pointer; transition:transform 0.15s; text-align:center; }
+        .profile-actions .btn:active { transform:scale(0.96); }
+        .btn-withdraw { background:linear-gradient(135deg,#ffd700,#ffaa00); color:#000; }
+        .btn-invite { background:linear-gradient(135deg,#25D366,#128C7E); color:#fff; }
+        .btn-logout { background:#2a1a1a; border:1px solid #ff4444; color:#ff4444; }
 
-        .history-box {
-            background: #1a1a3a;
-            border-radius: 12px;
-            padding: 10px;
-            border: 1px solid #2a2a5a;
-            flex-shrink: 0;
-        }
-        .history-box h3 { font-size: 13px; color: #aaa; margin-bottom: 4px; }
-        .history-entry {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 4px 0;
-            border-bottom: 1px solid #1a1a2a;
-            font-size: 12px;
-            color: #aaa;
-            flex-wrap: wrap;
-            gap: 2px;
-        }
-        .history-entry .txn { color: #88ccff; font-weight: 600; font-size: 11px; min-width: 80px; }
-        .history-entry .amount { font-weight: 600; color: #ffd700; }
-        .history-entry .status.done { color: #66ff88; }
-        .history-entry .status.pending { color: #ffaa00; }
-        .history-entry .status.rejected { color: #ff4444; }
+        .history-box { background:#1a1a3a; border-radius:12px; padding:10px; border:1px solid #2a2a5a; flex-shrink:0; }
+        .history-box h3 { font-size:13px; color:#aaa; margin-bottom:4px; }
+        .history-entry { display:flex; justify-content:space-between; align-items:center; padding:4px 0; border-bottom:1px solid #1a1a2a; font-size:12px; color:#aaa; flex-wrap:wrap; gap:2px; }
+        .history-entry .txn { color:#88ccff; font-weight:600; font-size:11px; min-width:80px; }
+        .history-entry .amount { font-weight:600; color:#ffd700; }
+        .history-entry .status.done { color:#66ff88; }
+        .history-entry .status.pending { color:#ffaa00; }
+        .history-entry .status.rejected { color:#ff4444; }
 
-        .bottom-nav {
-            display: flex;
-            justify-content: space-around;
-            background: #1a1a3a;
-            border-radius: 16px;
-            padding: 6px 2px;
-            margin-top: 8px;
-            border: 1px solid #2a2a5a;
-            flex-shrink: 0;
-            width: 100%;
-            overflow-x: auto;
-            gap: 2px;
-        }
-        .bottom-nav a {
-            background: none;
-            border: none;
-            color: #8888bb;
-            font-size: 10px;
-            padding: 4px 6px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.25s;
-            text-decoration: none;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 1px;
-            min-width: 40px;
-            flex-shrink: 0;
-        }
-        .bottom-nav a .icon { font-size: 18px; line-height: 1; }
-        .bottom-nav a.active {
-            color: #00ddff;
-            background: rgba(0, 221, 255, 0.08);
-        }
-        .bottom-nav a:active { transform: scale(0.94); }
+        .bottom-nav { display:flex; justify-content:space-around; background:#1a1a3a; border-radius:16px; padding:6px 2px; margin-top:8px; border:1px solid #2a2a5a; flex-shrink:0; width:100%; overflow-x:auto; gap:2px; }
+        .bottom-nav a { background:none; border:none; color:#8888bb; font-size:10px; padding:4px 6px; border-radius:8px; cursor:pointer; font-weight:600; transition:all 0.25s; text-decoration:none; display:flex; flex-direction:column; align-items:center; gap:1px; min-width:40px; flex-shrink:0; }
+        .bottom-nav a .icon { font-size:18px; line-height:1; }
+        .bottom-nav a.active { color:#00ddff; background:rgba(0,221,255,0.08); }
+        .bottom-nav a:active { transform:scale(0.94); }
 
-        .toast-msg {
-            position: fixed;
-            bottom: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: #1a2a1a;
-            border: 1px solid #33aa55;
-            border-radius: 12px;
-            padding: 10px 20px;
-            color: #66ff88;
-            font-size: 14px;
-            font-weight: 500;
-            z-index: 1000;
-            max-width: 90%;
-            text-align: center;
-            box-shadow: 0 8px 30px rgba(0,0,0,0.5);
-            animation: fadeIn 0.3s ease;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.5s;
-        }
-        .toast-msg.show { opacity: 1; }
-        .toast-msg.error { border-color: #ff4444; color: #ff6644; background: #2a1a1a; }
+        .toast-msg { position:fixed; bottom:100px; left:50%; transform:translateX(-50%); background:#1a2a1a; border:1px solid #33aa55; border-radius:12px; padding:10px 20px; color:#66ff88; font-size:14px; font-weight:500; z-index:1000; max-width:90%; text-align:center; box-shadow:0 8px 30px rgba(0,0,0,0.5); animation:fadeIn 0.3s ease; pointer-events:none; opacity:0; transition:opacity 0.5s; }
+        .toast-msg.show { opacity:1; }
+        .toast-msg.error { border-color:#ff4444; color:#ff6644; background:#2a1a1a; }
 
-        .modal-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(0, 0, 0, 0.7);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 100;
-            backdrop-filter: blur(4px);
-            animation: fadeIn 0.2s ease;
-        }
-        .modal-overlay .modal {
-            background: #1a1a3a;
-            border-radius: 24px;
-            padding: 24px;
-            max-width: 380px;
-            width: 90%;
-            border: 1px solid #2a2a5a;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
-        }
-        .modal-overlay .modal h3 { font-size: 20px; color: #ffd700; margin-bottom: 12px; text-align: center; }
-        .modal-overlay .modal input {
-            width: 100%;
-            padding: 14px;
-            border-radius: 12px;
-            border: 2px solid #2a2a5a;
-            background: #0a0a1a;
-            color: #fff;
-            font-size: 15px;
-            outline: none;
-            margin-bottom: 10px;
-        }
-        .modal-overlay .modal input:focus { border-color: #00ddff; }
-        .modal-overlay .modal .modal-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 6px;
-        }
-        .modal-overlay .modal .modal-actions button {
-            flex: 1;
-            padding: 14px;
-            border: none;
-            border-radius: 14px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: transform 0.15s;
-        }
-        .modal-overlay .modal .modal-actions button:active { transform: scale(0.94); }
-        .modal-overlay .modal .modal-actions .submit { background: linear-gradient(135deg, #ffd700, #ffaa00); color: #000; }
-        .modal-overlay .modal .modal-actions .cancel { background: #2a2a5a; color: #aaa; }
-        .hidden { display: none !important; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.7); display:flex; justify-content:center; align-items:center; z-index:100; backdrop-filter:blur(4px); animation:fadeIn 0.2s ease; }
+        .modal-overlay .modal { background:#1a1a3a; border-radius:24px; padding:24px; max-width:380px; width:90%; border:1px solid #2a2a5a; box-shadow:0 20px 60px rgba(0,0,0,0.8); }
+        .modal-overlay .modal h3 { font-size:20px; color:#ffd700; margin-bottom:12px; text-align:center; }
+        .modal-overlay .modal input { width:100%; padding:14px; border-radius:12px; border:2px solid #2a2a5a; background:#0a0a1a; color:#fff; font-size:15px; outline:none; margin-bottom:10px; }
+        .modal-overlay .modal input:focus { border-color:#00ddff; }
+        .modal-overlay .modal .modal-actions { display:flex; gap:10px; margin-top:6px; }
+        .modal-overlay .modal .modal-actions button { flex:1; padding:14px; border:none; border-radius:14px; font-size:16px; font-weight:600; cursor:pointer; transition:transform 0.15s; }
+        .modal-overlay .modal .modal-actions button:active { transform:scale(0.94); }
+        .modal-overlay .modal .modal-actions .submit { background:linear-gradient(135deg,#ffd700,#ffaa00); color:#000; }
+        .modal-overlay .modal .modal-actions .cancel { background:#2a2a5a; color:#aaa; }
+        .hidden { display:none !important; }
+        @keyframes fadeIn { from { opacity:0; } to { opacity:1; } }
     </style>
 </head>
 <body>
@@ -277,13 +90,13 @@
             <div class="s"><div class="num" id="pWins">0</div><div class="lbl">Wins</div></div>
         </div>
 
-        <div class="balance-box" style="border-color: #00ddff;">
+        <div class="balance-box" style="border-color:#00ddff;">
             <div class="label">📊 CURRENT EARNINGS</div>
             <div class="amount" id="pCurrentBalance">₨ 0</div>
             <div class="next-date">Updates with prize pool (every 12h)</div>
         </div>
 
-        <div class="balance-box" style="border-color: #ffd700;">
+        <div class="balance-box" style="border-color:#ffd700;">
             <div class="label">💰 AVAILABLE BALANCE</div>
             <div class="amount" id="pAvailableBalance">₨ 0</div>
             <div class="next-date" id="pNextDate">📅 Next withdrawal: 30 July 2026</div>
@@ -328,51 +141,27 @@
 </div>
 
 <script>
-    // ================================================================
-    // PROFILE - WITH SUPABASE
-    // Vercel Clean URL | 30th July 2026
-    // ================================================================
-
-    // --- Vercel Base URL ---
     const BASE_URL = 'https://block-smash-cash.vercel.app';
 
-    // --- BOT VERIFICATION CHECK (every 3 hours) ---
     function checkBotVerification() {
         const verified = localStorage.getItem('bs_bot_verified') === 'true';
         const timestamp = parseInt(localStorage.getItem('bs_bot_timestamp') || '0');
         const threeHours = 3 * 60 * 60 * 1000;
-
         if (!verified || (Date.now() - timestamp) >= threeHours) {
-            const currentPage = 'profile.html';
-            window.location.href = BASE_URL + '/bot.html?return=' + encodeURIComponent(currentPage);
+            window.location.href = BASE_URL + '/bot.html?return=' + encodeURIComponent('profile.html');
         }
     }
-
     checkBotVerification();
     setInterval(checkBotVerification, 5 * 60 * 1000);
 
-    // --- CHECK LOGIN ---
     (async function() {
         const username = localStorage.getItem('bs_username');
-        if (!username) {
-            window.location.href = BASE_URL + '/login.html';
-            return;
-        }
-
+        if (!username) { window.location.href = BASE_URL + '/login.html'; return; }
         const user = await window.getUser(username);
-        if (!user) {
-            localStorage.removeItem('bs_username');
-            window.location.href = BASE_URL + '/login.html';
-            return;
-        }
-
-        // User is valid, render profile
+        if (!user) { localStorage.removeItem('bs_username'); window.location.href = BASE_URL + '/login.html'; return; }
         renderProfile();
     })();
 
-    // ================================================================
-    // TIERED PRIZE DISTRIBUTION (same as leaderboard)
-    // ================================================================
     function getPrizeByRank(rank, pool) {
         if (rank === 1) return pool * 0.10;
         else if (rank >= 2 && rank <= 5) return (pool * 0.16) / 4;
@@ -391,9 +180,6 @@
         return day + ' ' + months[month] + ' ' + year;
     }
 
-    // ================================================================
-    // SHOW TOAST
-    // ================================================================
     function showToast(msg, isError) {
         const el = document.getElementById('toastMsg');
         el.textContent = msg;
@@ -402,9 +188,6 @@
         el._timeout = setTimeout(() => { el.classList.remove('show'); }, 3000);
     }
 
-    // ================================================================
-    // RENDER PROFILE
-    // ================================================================
     async function renderProfile() {
         try {
             const username = localStorage.getItem('bs_username');
@@ -422,7 +205,6 @@
                 return;
             }
 
-            // Fetch user data from Supabase
             const user = await window.getUser(username);
             if (!user) {
                 showToast('User not found. Please login again.', true);
@@ -431,15 +213,11 @@
                 return;
             }
 
-            // Get all users to calculate rank
             const allUsers = await window.getAllUsers();
             const sorted = [...allUsers].sort((a, b) => (b.total_points || 0) - (a.total_points || 0));
             const rank = sorted.findIndex(u => u.username === username) + 1;
-
-            // Get prize pool
             const pool = await window.getPrizePool();
 
-            // Calculate current earnings
             let currentEarnings = 0;
             if (rank > 0 && rank <= 100 && pool > 0) {
                 currentEarnings = getPrizeByRank(rank, pool);
@@ -447,7 +225,6 @@
 
             const available = user.available_balance || 0;
 
-            // Update UI
             document.getElementById('profileUsername').textContent = user.username;
             document.getElementById('profileUid').textContent = '🆔 ID: ' + (user.user_id || '—');
             document.getElementById('profileRank').textContent = 'Rank: #' + (rank > 0 ? rank : '—');
@@ -458,7 +235,6 @@
             document.getElementById('pAvailableBalance').textContent = '₨ ' + available.toFixed(0);
             document.getElementById('pNextDate').textContent = '📅 Next withdrawal: ' + getNextWithdrawalDate();
 
-            // Withdrawal history
             const withdrawals = await window.getWithdrawals(username);
             const histContainer = document.getElementById('wdHistoryList');
             if (!withdrawals || withdrawals.length === 0) {
@@ -486,9 +262,6 @@
         }
     }
 
-    // ================================================================
-    // WITHDRAW MODAL
-    // ================================================================
     const modal = document.getElementById('withdrawModal');
     const wdAccount = document.getElementById('wdAccountInput');
     const wdAmount = document.getElementById('wdAmountInput');
@@ -497,8 +270,6 @@
     document.getElementById('withdrawBtn').addEventListener('click', function() {
         const username = localStorage.getItem('bs_username');
         if (!username) { showToast('Please login first.', true); return; }
-
-        // Get user data to check balance
         window.getUser(username).then(user => {
             if (!user) { showToast('User not found.', true); return; }
             const available = user.available_balance || 0;
@@ -538,7 +309,6 @@
         }
 
         try {
-            // Get current user data
             const user = await window.getUser(username);
             if (!user) { wdStatus.textContent = '❌ User not found.'; return; }
 
@@ -549,15 +319,12 @@
                 return;
             }
 
-            // Deduct from available balance
             const newAvailable = available - amount;
             await window.updateUserBalance(username, user.balance || 0, newAvailable);
 
-            // Create withdrawal request
             const txn = 'TXN-' + String(Date.now()).slice(-6);
             const success = await window.createWithdrawal(txn, username, account, amount);
             if (!success) {
-                // Rollback balance if failed
                 await window.updateUserBalance(username, user.balance || 0, available);
                 wdStatus.textContent = '❌ Failed to create withdrawal request.';
                 wdStatus.style.color = '#ff6644';
@@ -577,9 +344,6 @@
         }
     });
 
-    // ================================================================
-    // INVITE FRIENDS
-    // ================================================================
     document.getElementById('inviteBtn').addEventListener('click', function() {
         const username = localStorage.getItem('bs_username');
         if (!username) { showToast('Please login first.', true); return; }
@@ -596,23 +360,14 @@
         }
     });
 
-    // ================================================================
-    // LOGOUT - Redirect to logout.html
-    // ================================================================
     document.getElementById('logoutBtn').addEventListener('click', function() {
         window.location.href = BASE_URL + '/logout.html';
     });
 
-    // ================================================================
-    // ADMIN NAV
-    // ================================================================
     if (window.location.search.includes('admin=true')) {
         document.getElementById('adminNavLink').style.display = 'flex';
     }
 
-    // ================================================================
-    // AUTO REFRESH
-    // ================================================================
     setInterval(renderProfile, 60000);
 </script>
 </body>
