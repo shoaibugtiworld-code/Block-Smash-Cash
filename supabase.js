@@ -20,7 +20,7 @@ function getSupabase() {
 }
 
 // ================================================================
-// DATABASE FUNCTIONS
+// USER FUNCTIONS
 // ================================================================
 
 async function getUser(username) {
@@ -108,6 +108,24 @@ async function getAllUsers() {
     return data;
 }
 
+async function deleteUser(username) {
+    const client = getSupabase();
+    if (!client) return false;
+    const { error } = await client
+        .from('users')
+        .delete()
+        .eq('username', username);
+    if (error) {
+        console.error('Error deleting user:', error);
+        return false;
+    }
+    return true;
+}
+
+// ================================================================
+// REFERRAL FUNCTIONS
+// ================================================================
+
 async function getReferrals(referrer) {
     const client = getSupabase();
     if (!client) return [];
@@ -149,6 +167,23 @@ async function activateReferral(referee) {
         console.error('Error activating referral:', error);
     }
 }
+
+async function getAllReferrals() {
+    const client = getSupabase();
+    if (!client) return [];
+    const { data, error } = await client
+        .from('referrals')
+        .select('*');
+    if (error) {
+        console.error('Error fetching all referrals:', error);
+        return [];
+    }
+    return data;
+}
+
+// ================================================================
+// WITHDRAWAL FUNCTIONS
+// ================================================================
 
 async function getWithdrawals(username) {
     const client = getSupabase();
@@ -230,7 +265,10 @@ async function getAllWithdrawals() {
     return data;
 }
 
-// ===== SETTINGS FUNCTIONS =====
+// ================================================================
+// SETTINGS FUNCTIONS
+// ================================================================
+
 async function getSetting(key) {
     const client = getSupabase();
     if (!client) return null;
@@ -267,6 +305,10 @@ async function updatePrizePool(amount) {
     return await setSetting('current_pool', String(amount));
 }
 
+// ================================================================
+// ADMIN PASSWORD FUNCTIONS
+// ================================================================
+
 async function getAdminPassword() {
     return await getSetting('admin_password') || '';
 }
@@ -274,6 +316,53 @@ async function getAdminPassword() {
 async function setAdminPassword(password) {
     return await setSetting('admin_password', password);
 }
+
+// === NEW: Change Admin Password (requires current password) ===
+async function changeAdminPassword(currentPassword, newPassword) {
+    const current = await getAdminPassword();
+    if (current && current !== currentPassword) {
+        return { success: false, error: 'Current password is incorrect.' };
+    }
+    const success = await setAdminPassword(newPassword);
+    if (success) {
+        return { success: true, error: null };
+    }
+    return { success: false, error: 'Failed to update password.' };
+}
+
+// === NEW: Reset Admin Password (forgot password - requires security answer) ===
+// We'll store a security question and answer in settings
+async function getSecurityQuestion() {
+    return await getSetting('security_question') || 'What is your favorite color?';
+}
+
+async function getSecurityAnswer() {
+    return await getSetting('security_answer') || '';
+}
+
+async function setSecurityQuestion(question, answer) {
+    await setSetting('security_question', question);
+    await setSetting('security_answer', answer.toLowerCase().trim());
+}
+
+async function resetAdminPassword(securityAnswer, newPassword) {
+    const storedAnswer = await getSecurityAnswer();
+    if (!storedAnswer) {
+        return { success: false, error: 'Security question not set. Please contact support.' };
+    }
+    if (securityAnswer.toLowerCase().trim() !== storedAnswer) {
+        return { success: false, error: 'Incorrect security answer.' };
+    }
+    const success = await setAdminPassword(newPassword);
+    if (success) {
+        return { success: true, error: null };
+    }
+    return { success: false, error: 'Failed to reset password.' };
+}
+
+// ================================================================
+// AD SETTINGS FUNCTIONS
+// ================================================================
 
 async function getAdSetting(key) {
     return await getSetting(key) || '';
@@ -283,7 +372,10 @@ async function updateAdSetting(key, value) {
     return await setSetting(key, value);
 }
 
-// ===== BANNER & BOT FUNCTIONS =====
+// ================================================================
+// BANNER FUNCTIONS
+// ================================================================
+
 async function getHomeBanner() {
     return await getSetting('home_banner_code') || '';
 }
@@ -291,6 +383,10 @@ async function getHomeBanner() {
 async function setHomeBanner(code) {
     return await setSetting('home_banner_code', code);
 }
+
+// ================================================================
+// BOT FUNCTIONS
+// ================================================================
 
 async function getBotEnabled() {
     const val = await getSetting('bot_enabled');
@@ -301,15 +397,20 @@ async function setBotEnabled(enabled) {
     return await setSetting('bot_enabled', enabled ? 'true' : 'false');
 }
 
-// Export functions globally
+// ================================================================
+// EXPORT FUNCTIONS TO GLOBAL SCOPE
+// ================================================================
+
 window.getUser = getUser;
 window.createUser = createUser;
 window.updateUserStats = updateUserStats;
 window.updateUserBalance = updateUserBalance;
 window.getAllUsers = getAllUsers;
+window.deleteUser = deleteUser;
 window.getReferrals = getReferrals;
 window.addReferral = addReferral;
 window.activateReferral = activateReferral;
+window.getAllReferrals = getAllReferrals;
 window.getWithdrawals = getWithdrawals;
 window.createWithdrawal = createWithdrawal;
 window.updateWithdrawalStatus = updateWithdrawalStatus;
@@ -319,6 +420,10 @@ window.getPrizePool = getPrizePool;
 window.updatePrizePool = updatePrizePool;
 window.getAdminPassword = getAdminPassword;
 window.setAdminPassword = setAdminPassword;
+window.changeAdminPassword = changeAdminPassword;
+window.resetAdminPassword = resetAdminPassword;
+window.getSecurityQuestion = getSecurityQuestion;
+window.setSecurityQuestion = setSecurityQuestion;
 window.getAdSetting = getAdSetting;
 window.updateAdSetting = updateAdSetting;
 window.getHomeBanner = getHomeBanner;
@@ -327,3 +432,5 @@ window.getBotEnabled = getBotEnabled;
 window.setBotEnabled = setBotEnabled;
 window.getSetting = getSetting;
 window.setSetting = setSetting;
+
+console.log('✅ Supabase.js loaded successfully!');
