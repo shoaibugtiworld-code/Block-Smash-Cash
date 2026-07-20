@@ -1,3 +1,6 @@
+<!-- ============================================================ -->
+<!-- FILE: index.html (COMPLETE - FIXED SCRIPT ORDER)            -->
+<!-- ============================================================ -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -154,7 +157,6 @@
             flex-shrink: 0;
         }
 
-        /* ===== HOME BANNER ===== */
         #homeBannerContainer {
             min-height: 60px;
             margin: 6px 0;
@@ -246,11 +248,9 @@
 
         <div class="pool-update-note">🔄 Prize pool updates every 12 hours</div>
 
-        <!-- ===== HOME BANNER (Empty by default, Admin can set) ===== -->
         <div id="homeBannerContainer"></div>
     </div>
 
-    <!-- ===== NAVIGATION ===== -->
     <div class="bottom-nav">
         <a href="index.html" class="active">🏠<span>Home</span></a>
         <a href="leaderboard.html">🏆<span>Top</span></a>
@@ -263,13 +263,10 @@
 <script>
     // ================================================================
     // HOME PAGE - WITH SUPABASE
-    // Vercel Clean URL | 30th July 2026
     // ================================================================
 
-    // --- Vercel Base URL (Clean, no GitHub name) ---
     const BASE_URL = 'https://block-smash-cash.vercel.app';
 
-    // --- BOT VERIFICATION CHECK (every 3 hours) ---
     function checkBotVerification() {
         const verified = localStorage.getItem('bs_bot_verified') === 'true';
         const timestamp = parseInt(localStorage.getItem('bs_bot_timestamp') || '0');
@@ -281,13 +278,9 @@
         }
     }
 
-    // Check on load
     checkBotVerification();
-
-    // Check every 5 minutes
     setInterval(checkBotVerification, 5 * 60 * 1000);
 
-    // --- CHECK LOGIN ---
     (async function() {
         const username = localStorage.getItem('bs_username');
         if (!username) {
@@ -306,7 +299,6 @@
         loadHomeBanner();
     })();
 
-    // --- HELPERS ---
     function getPhase(count) {
         const phases = [100, 150, 200, 250, 500];
         let idx = 0;
@@ -337,7 +329,6 @@
         return arrow;
     }
 
-    // --- UPDATED: Withdrawal date changed to 30th ---
     function getNextWithdrawalDate() {
         const d = new Date();
         let month = d.getMonth(), year = d.getFullYear(), day = 30;
@@ -361,7 +352,6 @@
         document.getElementById('phaseArrow').textContent = getPhaseArrow(count);
     }
 
-    // --- LOAD HOME BANNER ---
     async function loadHomeBanner() {
         const container = document.getElementById('homeBannerContainer');
         const code = await window.getHomeBanner();
@@ -374,7 +364,6 @@
         }
     }
 
-    // --- PLAY BUTTON ---
     document.getElementById('homePlayBtn').addEventListener('click', function() {
         window.getAdSetting('ad_play').then(adLink => {
             if (adLink) {
@@ -390,12 +379,10 @@
         });
     });
 
-    // --- ADMIN LINK ---
     if (window.location.search.includes('admin=true')) {
         document.getElementById('adminNavLink').style.display = 'flex';
     }
 
-    // --- AUTO REFRESH ---
     setInterval(renderHome, 60000);
 </script>
 </body>
