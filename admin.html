@@ -140,6 +140,51 @@
             margin-top: 4px;
         }
 
+        .banner-box {
+            background: #1a2a3a;
+            border: 1px solid #ffd700;
+            border-radius: 12px;
+            padding: 10px 14px;
+            flex-shrink: 0;
+        }
+        .banner-box .label {
+            color: #ffd700;
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        .banner-box textarea {
+            width: 100%;
+            padding: 10px;
+            border-radius: 10px;
+            border: 2px solid #2a2a5a;
+            background: #0a0a1a;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+            min-height: 80px;
+            resize: vertical;
+            margin: 6px 0;
+        }
+        .banner-box textarea:focus { border-color: #ffd700; }
+        .banner-box .save-btn {
+            padding: 8px 20px;
+            border: none;
+            border-radius: 10px;
+            background: #ffd700;
+            color: #000;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .banner-box .save-btn:active { transform: scale(0.94); }
+        .banner-box .info {
+            font-size: 11px;
+            color: #8888bb;
+            margin-top: 4px;
+        }
+
         .search-filter {
             display: flex;
             gap: 6px;
@@ -198,14 +243,7 @@
             min-width: 80px;
         }
         .admin-actions a:active { transform: scale(0.94); }
-        .admin-actions .ads-btn {
-            background: #ffd700;
-            color: #000;
-        }
-        .admin-actions .banner-btn {
-            background: #00ddff;
-            color: #000;
-        }
+        .admin-actions .ads-btn { background: #ffd700; color: #000; }
 
         .admin-user {
             background: #1a1a3a;
@@ -365,6 +403,54 @@
         .login-screen .login-btn:active { transform: scale(0.96); }
         .login-screen .error { color: #ff6644; font-size: 13px; margin-top: 8px; }
         .login-screen .setup-msg { color: #66ff88; font-size: 13px; margin-top: 8px; }
+
+        .admin-password-section {
+            background: #1a1a3a;
+            border: 1px solid #2a2a5a;
+            border-radius: 12px;
+            padding: 10px 14px;
+            flex-shrink: 0;
+        }
+        .admin-password-section .label {
+            color: #00ddff;
+            font-weight: 600;
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
+        .admin-password-section input {
+            width: 100%;
+            padding: 8px 12px;
+            border-radius: 8px;
+            border: 2px solid #2a2a5a;
+            background: #0a0a1a;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+            margin-bottom: 4px;
+        }
+        .admin-password-section input:focus { border-color: #00ddff; }
+        .admin-password-section .pass-btn {
+            padding: 6px 16px;
+            border: none;
+            border-radius: 8px;
+            background: #00ddff;
+            color: #000;
+            font-weight: 600;
+            font-size: 12px;
+            cursor: pointer;
+            transition: transform 0.15s;
+            margin-right: 4px;
+        }
+        .admin-password-section .pass-btn:active { transform: scale(0.94); }
+        .admin-password-section .pass-btn.danger { background: #ff4444; color: #fff; }
+        .admin-password-section .pass-btn.warning { background: #ffd700; color: #000; }
+        .admin-password-section .pass-status {
+            font-size: 11px;
+            color: #8888bb;
+            margin-top: 4px;
+            min-height: 18px;
+        }
+
         .hidden { display: none !important; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
@@ -420,51 +506,15 @@
 
         .no-users { text-align: center; padding: 20px; color: #8888bb; font-size: 14px; }
 
-        /* Banner settings box */
-        .banner-box {
-            background: #1a2a3a;
-            border: 1px solid #ffd700;
-            border-radius: 12px;
-            padding: 10px 14px;
-            flex-shrink: 0;
-        }
-        .banner-box .label {
+        .forgot-link {
             color: #ffd700;
-            font-weight: 600;
-            font-size: 13px;
-            margin-bottom: 4px;
-        }
-        .banner-box textarea {
-            width: 100%;
-            padding: 10px;
-            border-radius: 10px;
-            border: 2px solid #2a2a5a;
-            background: #0a0a1a;
-            color: #fff;
-            font-size: 13px;
-            outline: none;
-            min-height: 80px;
-            resize: vertical;
-            margin: 6px 0;
-        }
-        .banner-box textarea:focus { border-color: #ffd700; }
-        .banner-box .save-btn {
-            padding: 8px 20px;
-            border: none;
-            border-radius: 10px;
-            background: #ffd700;
-            color: #000;
-            font-weight: 600;
-            font-size: 13px;
+            font-size: 12px;
             cursor: pointer;
-            transition: transform 0.15s;
-        }
-        .banner-box .save-btn:active { transform: scale(0.94); }
-        .banner-box .info {
-            font-size: 11px;
-            color: #8888bb;
+            text-decoration: underline;
             margin-top: 4px;
+            display: inline-block;
         }
+        .forgot-link:active { opacity: 0.7; }
     </style>
 </head>
 <body>
@@ -479,6 +529,9 @@
         <button class="login-btn" id="loginBtn">🔓 Login</button>
         <div id="loginError" class="error"></div>
         <div id="setupMsg" class="setup-msg hidden"></div>
+        <div id="forgotLinkContainer" style="display:none; margin-top: 8px;">
+            <span class="forgot-link" id="forgotPasswordLink">🔑 Forgot Password?</span>
+        </div>
     </div>
 
     <!-- ===== ADMIN DASHBOARD ===== -->
@@ -505,7 +558,33 @@
                 <div class="next-update" id="nextUpdateTime">⏳ Next auto-update: --</div>
             </div>
 
-            <!-- ===== HOME BANNER SETTINGS ===== -->
+            <!-- ===== ADMIN PASSWORD SECTION (Change & Forgot) ===== -->
+            <div class="admin-password-section">
+                <div class="label">🔐 Admin Password</div>
+                <input type="password" id="oldPasswordInput" placeholder="Current password" />
+                <input type="password" id="newPasswordInput" placeholder="New password (min 4 chars)" />
+                <div>
+                    <button class="pass-btn" id="changePasswordBtn">Change Password</button>
+                    <button class="pass-btn warning" id="showForgotBtn">🔑 Forgot Password</button>
+                </div>
+                <div id="passStatus" class="pass-status"></div>
+            </div>
+
+            <!-- ===== FORGOT PASSWORD MODAL (Inline) ===== -->
+            <div id="forgotModal" style="display:none; background:#1a1a3a; border:2px solid #ffd700; border-radius:12px; padding:14px; flex-shrink:0;">
+                <div style="color:#ffd700;font-weight:600;font-size:14px;margin-bottom:6px;">🔑 Reset Password</div>
+                <p style="color:#aaa;font-size:12px;margin-bottom:6px;">Answer your security question to reset.</p>
+                <div style="color:#fff;font-size:14px;margin-bottom:4px;" id="securityQuestionDisplay">What is your favorite color?</div>
+                <input type="text" id="securityAnswerInput" placeholder="Enter your answer" style="width:100%;padding:8px 12px;border-radius:8px;border:2px solid #2a2a5a;background:#0a0a1a;color:#fff;font-size:13px;outline:none;margin-bottom:6px;" />
+                <input type="password" id="resetNewPasswordInput" placeholder="New password (min 4 chars)" style="width:100%;padding:8px 12px;border-radius:8px;border:2px solid #2a2a5a;background:#0a0a1a;color:#fff;font-size:13px;outline:none;margin-bottom:6px;" />
+                <div>
+                    <button class="pass-btn" id="resetPasswordBtn">Reset Password</button>
+                    <button class="pass-btn danger" id="cancelForgotBtn">Cancel</button>
+                </div>
+                <div id="forgotStatus" style="font-size:11px;color:#8888bb;margin-top:4px;"></div>
+            </div>
+
+            <!-- Banner Settings -->
             <div class="banner-box">
                 <div class="label">📢 Home Page Banner Ad</div>
                 <textarea id="bannerCodeInput" placeholder="Paste banner HTML/iframe code here..."></textarea>
@@ -560,15 +639,13 @@
 
 <script>
     // ================================================================
-    // ADMIN PANEL - WITH SUPABASE
+    // ADMIN PANEL - WITH SUPABASE + PASSWORD CHANGE/FORGOT
     // ================================================================
 
     (function() {
         'use strict';
 
-        const ADMIN_SESSION_KEY = 'bs_admin_session';
-        const BOT_VERIFIED_KEY = 'bs_bot_verified';
-        const BOT_TIMESTAMP_KEY = 'bs_bot_timestamp';
+        const BASE_URL = 'https://block-smash-cash.vercel.app';
 
         // DOM REFS
         const loginScreen = document.getElementById('loginScreen');
@@ -578,6 +655,8 @@
         const loginError = document.getElementById('loginError');
         const setupMsg = document.getElementById('setupMsg');
         const loginDesc = document.getElementById('loginDesc');
+        const forgotLinkContainer = document.getElementById('forgotLinkContainer');
+        const forgotPasswordLink = document.getElementById('forgotPasswordLink');
         const logoutBtn = document.getElementById('logoutAdminBtn');
 
         const searchInput = document.getElementById('searchInput');
@@ -589,6 +668,22 @@
         const nextUpdateTime = document.getElementById('nextUpdateTime');
         const bannerCodeInput = document.getElementById('bannerCodeInput');
         const saveBannerBtn = document.getElementById('saveBannerBtn');
+
+        // Password change
+        const oldPasswordInput = document.getElementById('oldPasswordInput');
+        const newPasswordInput = document.getElementById('newPasswordInput');
+        const changePasswordBtn = document.getElementById('changePasswordBtn');
+        const passStatus = document.getElementById('passStatus');
+
+        // Forgot password
+        const forgotModal = document.getElementById('forgotModal');
+        const showForgotBtn = document.getElementById('showForgotBtn');
+        const cancelForgotBtn = document.getElementById('cancelForgotBtn');
+        const securityQuestionDisplay = document.getElementById('securityQuestionDisplay');
+        const securityAnswerInput = document.getElementById('securityAnswerInput');
+        const resetNewPasswordInput = document.getElementById('resetNewPasswordInput');
+        const resetPasswordBtn = document.getElementById('resetPasswordBtn');
+        const forgotStatus = document.getElementById('forgotStatus');
 
         const botModal = document.getElementById('botModal');
         const botQuestion = document.getElementById('botQuestion');
@@ -604,24 +699,25 @@
         ];
         let currentBotQuestion = botQuestions[0];
         let isLoggedIn = false;
+        let currentAdminPassword = '';
 
         // ================================================================
         // BOT FUNCTIONS
         // ================================================================
         function isBotVerified() {
-            const verified = localStorage.getItem(BOT_VERIFIED_KEY) === 'true';
-            const timestamp = parseInt(localStorage.getItem(BOT_TIMESTAMP_KEY) || '0');
+            const verified = localStorage.getItem('bs_bot_verified') === 'true';
+            const timestamp = parseInt(localStorage.getItem('bs_bot_timestamp') || '0');
             return verified && (Date.now() - timestamp) < 3 * 60 * 60 * 1000;
         }
 
         function setBotVerified() {
-            localStorage.setItem(BOT_VERIFIED_KEY, 'true');
-            localStorage.setItem(BOT_TIMESTAMP_KEY, String(Date.now()));
+            localStorage.setItem('bs_bot_verified', 'true');
+            localStorage.setItem('bs_bot_timestamp', String(Date.now()));
         }
 
         function resetBotVerification() {
-            localStorage.removeItem(BOT_VERIFIED_KEY);
-            localStorage.removeItem(BOT_TIMESTAMP_KEY);
+            localStorage.removeItem('bs_bot_verified');
+            localStorage.removeItem('bs_bot_timestamp');
         }
 
         function showBotTest(callback) {
@@ -678,8 +774,9 @@
         // CHECK ADMIN SESSION
         // ================================================================
         async function checkAdminSession() {
-            const session = localStorage.getItem(ADMIN_SESSION_KEY);
+            const session = localStorage.getItem('bs_admin_session');
             const adminPassword = await window.getAdminPassword();
+            currentAdminPassword = adminPassword;
 
             if (session === 'true' && adminPassword) {
                 isLoggedIn = true;
@@ -687,8 +784,9 @@
                 dashboard.classList.remove('hidden');
                 loadAdminData();
                 showBotTest(function() {});
-                // Set interval for auto-refresh
                 setInterval(loadAdminData, 30000);
+                // Show forgot link on login screen for future
+                forgotLinkContainer.style.display = 'none';
             } else {
                 loginScreen.classList.remove('hidden');
                 dashboard.classList.add('hidden');
@@ -697,10 +795,12 @@
                     loginBtn.textContent = '🔑 Set Password';
                     setupMsg.classList.remove('hidden');
                     setupMsg.textContent = '⚠️ This password cannot be changed later. Keep it safe!';
+                    forgotLinkContainer.style.display = 'none';
                 } else {
                     loginDesc.textContent = 'Enter your admin password to continue.';
                     loginBtn.textContent = '🔓 Login';
                     setupMsg.classList.add('hidden');
+                    forgotLinkContainer.style.display = 'block';
                 }
             }
         }
@@ -715,17 +815,31 @@
             const adminPassword = await window.getAdminPassword();
 
             if (!adminPassword) {
-                // First time: set password
+                // First time: set password and security question
+                const question = prompt('Set a security question (e.g. What is your favorite color?):', 'What is your favorite color?');
+                if (!question) {
+                    loginError.textContent = '❌ Security question is required.';
+                    return;
+                }
+                const answer = prompt('Set the answer for your security question:');
+                if (!answer) {
+                    loginError.textContent = '❌ Security answer is required.';
+                    return;
+                }
+                await window.setSecurityQuestion(question, answer);
+
                 const success = await window.setAdminPassword(input);
                 if (success) {
-                    localStorage.setItem(ADMIN_SESSION_KEY, 'true');
+                    localStorage.setItem('bs_admin_session', 'true');
                     loginError.textContent = '';
                     loginScreen.classList.add('hidden');
                     dashboard.classList.remove('hidden');
                     isLoggedIn = true;
+                    currentAdminPassword = input;
                     loadAdminData();
                     showBotTest(function() {});
                     setInterval(loadAdminData, 30000);
+                    showToast('✅ Admin password set successfully!');
                 } else {
                     loginError.textContent = '❌ Failed to set password. Please try again.';
                 }
@@ -734,7 +848,7 @@
 
             // Login
             if (input === adminPassword) {
-                localStorage.setItem(ADMIN_SESSION_KEY, 'true');
+                localStorage.setItem('bs_admin_session', 'true');
                 loginError.textContent = '';
                 loginScreen.classList.add('hidden');
                 dashboard.classList.remove('hidden');
@@ -742,6 +856,7 @@
                 loadAdminData();
                 showBotTest(function() {});
                 setInterval(loadAdminData, 30000);
+                forgotLinkContainer.style.display = 'none';
             } else {
                 loginError.textContent = '❌ Wrong password. Try again.';
                 passwordInput.value = '';
@@ -752,15 +867,110 @@
         passwordInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') loginBtn.click(); });
 
         // ================================================================
+        // FORGOT PASSWORD - Show Modal
+        // ================================================================
+        forgotPasswordLink.addEventListener('click', async function() {
+            const question = await window.getSecurityQuestion();
+            securityQuestionDisplay.textContent = question || 'What is your favorite color?';
+            securityAnswerInput.value = '';
+            resetNewPasswordInput.value = '';
+            forgotStatus.textContent = '';
+            forgotModal.style.display = 'block';
+        });
+
+        // ================================================================
+        // FORGOT PASSWORD - Cancel
+        // ================================================================
+        cancelForgotBtn.addEventListener('click', function() {
+            forgotModal.style.display = 'none';
+        });
+
+        // ================================================================
+        // FORGOT PASSWORD - Reset
+        // ================================================================
+        resetPasswordBtn.addEventListener('click', async function() {
+            const answer = securityAnswerInput.value.trim();
+            const newPass = resetNewPasswordInput.value.trim();
+
+            if (!answer) { forgotStatus.textContent = '❌ Please enter your security answer.';
+                forgotStatus.style.color = '#ff6644'; return; }
+            if (!newPass || newPass.length < 4) {
+                forgotStatus.textContent = '❌ New password must be at least 4 characters.';
+                forgotStatus.style.color = '#ff6644';
+                return;
+            }
+
+            const result = await window.resetAdminPassword(answer, newPass);
+            if (result.success) {
+                forgotStatus.textContent = '✅ Password reset successfully! Please login with new password.';
+                forgotStatus.style.color = '#66ff88';
+                currentAdminPassword = newPass;
+                setTimeout(() => {
+                    forgotModal.style.display = 'none';
+                    // Logout and show login screen
+                    localStorage.removeItem('bs_admin_session');
+                    isLoggedIn = false;
+                    loginScreen.classList.remove('hidden');
+                    dashboard.classList.add('hidden');
+                    loginDesc.textContent = 'Enter your admin password to continue.';
+                    loginBtn.textContent = '🔓 Login';
+                    setupMsg.classList.add('hidden');
+                    forgotLinkContainer.style.display = 'block';
+                    passwordInput.value = '';
+                    showToast('✅ Password reset! Login with your new password.');
+                }, 1500);
+            } else {
+                forgotStatus.textContent = '❌ ' + (result.error || 'Failed to reset password.');
+                forgotStatus.style.color = '#ff6644';
+            }
+        });
+
+        // ================================================================
+        // CHANGE PASSWORD
+        // ================================================================
+        changePasswordBtn.addEventListener('click', async function() {
+            const oldPass = oldPasswordInput.value.trim();
+            const newPass = newPasswordInput.value.trim();
+
+            if (!oldPass) { passStatus.textContent = '❌ Please enter current password.';
+                passStatus.style.color = '#ff6644'; return; }
+            if (!newPass || newPass.length < 4) {
+                passStatus.textContent = '❌ New password must be at least 4 characters.';
+                passStatus.style.color = '#ff6644';
+                return;
+            }
+            if (oldPass === newPass) {
+                passStatus.textContent = '❌ New password must be different from current.';
+                passStatus.style.color = '#ff6644';
+                return;
+            }
+
+            const result = await window.changeAdminPassword(oldPass, newPass);
+            if (result.success) {
+                passStatus.textContent = '✅ Password changed successfully!';
+                passStatus.style.color = '#66ff88';
+                currentAdminPassword = newPass;
+                oldPasswordInput.value = '';
+                newPasswordInput.value = '';
+                showToast('✅ Admin password changed!');
+            } else {
+                passStatus.textContent = '❌ ' + (result.error || 'Failed to change password.');
+                passStatus.style.color = '#ff6644';
+            }
+        });
+
+        // ================================================================
         // LOGOUT
         // ================================================================
         logoutBtn.addEventListener('click', function() {
-            localStorage.removeItem(ADMIN_SESSION_KEY);
+            localStorage.removeItem('bs_admin_session');
             isLoggedIn = false;
             loginScreen.classList.remove('hidden');
             dashboard.classList.add('hidden');
             passwordInput.value = '';
             loginError.textContent = '';
+            forgotLinkContainer.style.display = 'block';
+            showToast('👋 Logged out of admin panel.');
         });
 
         // ================================================================
@@ -816,13 +1026,11 @@
         // ================================================================
         async function loadAdminData() {
             try {
-                // Get data from Supabase
                 const users = await window.getAllUsers();
                 const allWithdrawals = await window.getAllWithdrawals();
                 const pendingWithdrawals = await window.getPendingWithdrawals();
                 const pool = await window.getPrizePool();
 
-                // Stats
                 const totalUsers = users ? users.length : 0;
                 const activeUsers = users ? users.filter(u => (u.total_games || 0) > 0).length : 0;
                 const pendingCount = pendingWithdrawals ? pendingWithdrawals.length : 0;
@@ -835,7 +1043,6 @@
                 document.getElementById('currentPoolDisplay').textContent = '₨ ' + (pool || 0).toFixed(0);
                 document.getElementById('nextUpdateTime').textContent = '⏳ Next auto-update: ' + getNextUpdateTime();
 
-                // Filter users
                 const query = searchInput.value.toLowerCase().trim();
                 const filter = filterSelect.value;
                 let filtered = users || [];
@@ -855,7 +1062,6 @@
                     filtered = filtered.filter(u => pendingUsernames.includes(u.username));
                 }
 
-                // Sort: pending first, then by points
                 const sorted = [...filtered].sort((a, b) => {
                     const aPending = (pendingWithdrawals || []).some(w => w.username === a.username) ? 1 : 0;
                     const bPending = (pendingWithdrawals || []).some(w => w.username === b.username) ? 1 : 0;
@@ -904,7 +1110,6 @@
                 });
                 container.innerHTML = html;
 
-                // Load banner
                 await loadBanner();
 
             } catch (error) {
@@ -947,7 +1152,6 @@
                 if (idx === -1) { showToast('❌ No pending request for ' + username); return; }
 
                 const wd = allWithdrawals[idx];
-                // Refund balance
                 const users = await window.getAllUsers();
                 const user = users.find(u => u.username === username);
                 if (user) {
@@ -955,7 +1159,6 @@
                     await window.updateUserBalance(username, newBalance, user.available_balance || 0);
                 }
 
-                // Remove the withdrawal
                 const success = await window.updateWithdrawalStatus(wd.txn, 'rejected');
                 if (success) {
                     showToast('❌ Withdrawal rejected for ' + username + '. Balance refunded.');
@@ -991,10 +1194,21 @@
         window._adminDeleteUser = async function(username) {
             if (!confirm('Delete user "' + username + '" and all their data?')) return;
             try {
-                // Delete from users table (we need to implement delete functionality in supabase.js)
-                // For now, we'll just show a message
-                showToast('🗑️ User deletion requires additional implementation. Contact support.');
-                // Note: We need to add deleteUser function to supabase.js
+                const success = await window.deleteUser(username);
+                if (success) {
+                    // Also remove withdrawals and referrals
+                    const allWithdrawals = await window.getAllWithdrawals();
+                    const updatedWithdrawals = allWithdrawals.filter(w => w.username !== username);
+                    localStorage.setItem('bs_withdrawals', JSON.stringify(updatedWithdrawals));
+                    // Remove from referrals
+                    const allReferrals = await window.getAllReferrals();
+                    const updatedReferrals = allReferrals.filter(r => r.referrer !== username && r.referee !== username);
+                    localStorage.setItem('bs_referrals', JSON.stringify(updatedReferrals));
+                    showToast('🗑️ User deleted: ' + username);
+                    loadAdminData();
+                } else {
+                    showToast('❌ Failed to delete user.');
+                }
             } catch (error) {
                 console.error('Error deleting user:', error);
                 showToast('❌ Error deleting user.');
@@ -1025,7 +1239,6 @@
         // ================================================================
         checkAdminSession();
 
-        // Check auto-update for pool every minute
         setInterval(() => {
             if (isLoggedIn) loadAdminData();
         }, 60000);
