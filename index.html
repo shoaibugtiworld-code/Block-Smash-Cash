@@ -7,7 +7,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="supabase.js"></script>
     <style>
-        /* === SAME STYLES AS BEFORE === */
         * {
             margin: 0;
             padding: 0;
@@ -155,6 +154,24 @@
             flex-shrink: 0;
         }
 
+        /* ===== HOME BANNER ===== */
+        #homeBannerContainer {
+            min-height: 60px;
+            margin: 6px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: transparent;
+            border-radius: 8px;
+            overflow: hidden;
+            flex-shrink: 0;
+        }
+        #homeBannerContainer img {
+            max-width: 100%;
+            max-height: 100%;
+            border-radius: 8px;
+        }
+
         .bottom-nav {
             display: flex;
             justify-content: space-around;
@@ -228,8 +245,12 @@
         </div>
 
         <div class="pool-update-note">🔄 Prize pool updates every 12 hours</div>
+
+        <!-- ===== HOME BANNER (Empty by default, Admin can set) ===== -->
+        <div id="homeBannerContainer"></div>
     </div>
 
+    <!-- ===== NAVIGATION ===== -->
     <div class="bottom-nav">
         <a href="index.html" class="active">🏠<span>Home</span></a>
         <a href="leaderboard.html">🏆<span>Top</span></a>
@@ -238,10 +259,29 @@
         <a href="admin.html" id="adminNavLink" style="display:none;">⚙️<span>Admin</span></a>
     </div>
 </div>
+
 <script>
     // ================================================================
     // HOME PAGE - WITH SUPABASE
     // ================================================================
+
+    // --- BOT VERIFICATION CHECK (every 3 hours) ---
+    function checkBotVerification() {
+        const verified = localStorage.getItem('bs_bot_verified') === 'true';
+        const timestamp = parseInt(localStorage.getItem('bs_bot_timestamp') || '0');
+        const threeHours = 3 * 60 * 60 * 1000;
+
+        if (!verified || (Date.now() - timestamp) >= threeHours) {
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            window.location.href = 'bot.html?return=' + encodeURIComponent(currentPage);
+        }
+    }
+
+    // Check on load
+    checkBotVerification();
+
+    // Check every 5 minutes
+    setInterval(checkBotVerification, 5 * 60 * 1000);
 
     // --- CHECK LOGIN ---
     (async function() {
@@ -251,25 +291,18 @@
             return;
         }
 
-        // Check if user exists in Supabase
         const user = await window.getUser(username);
         if (!user) {
-            // User not found in Supabase, logout
             localStorage.removeItem('bs_username');
             window.location.href = 'login.html';
             return;
         }
 
-        // User is valid, continue
         renderHome();
+        loadHomeBanner();
     })();
 
     // --- HELPERS ---
-    async function getPool() {
-        return await window.getPrizePool();
-    }
-
-    // --- PHASES ---
     function getPhase(count) {
         const phases = [100, 150, 200, 250, 500];
         let idx = 0;
@@ -308,10 +341,9 @@
     }
 
     async function renderHome() {
-        // Get users count from Supabase
         const users = await window.getAllUsers();
         const count = users.length;
-        const pool = await getPool();
+        const pool = await window.getPrizePool();
 
         document.getElementById('homePlayers').textContent = count;
         document.getElementById('homePool').textContent = '₨ ' + pool.toFixed(0);
@@ -323,9 +355,21 @@
         document.getElementById('phaseArrow').textContent = getPhaseArrow(count);
     }
 
-    // --- PLAY BUTTON (with Ad) ---
+    // --- LOAD HOME BANNER ---
+    async function loadHomeBanner() {
+        const container = document.getElementById('homeBannerContainer');
+        const code = await window.getHomeBanner();
+        if (code && code.trim() !== '') {
+            container.innerHTML = code;
+            container.style.minHeight = 'auto';
+        } else {
+            container.innerHTML = '';
+            container.style.minHeight = '60px';
+        }
+    }
+
+    // --- PLAY BUTTON ---
     document.getElementById('homePlayBtn').addEventListener('click', function() {
-        // Check ad link from Supabase
         window.getAdSetting('ad_play').then(adLink => {
             if (adLink) {
                 window.open(adLink, '_blank');
@@ -334,7 +378,6 @@
                 window.location.href = 'game.html';
             }, 500);
         }).catch(() => {
-            // Fallback
             setTimeout(() => {
                 window.location.href = 'game.html';
             }, 500);
@@ -348,9 +391,6 @@
 
     // --- AUTO REFRESH ---
     setInterval(renderHome, 60000);
-
-    // Initial render
-    renderHome();
 </script>
 </body>
 </html>
