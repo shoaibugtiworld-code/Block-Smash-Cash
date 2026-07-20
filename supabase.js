@@ -1,36 +1,31 @@
-<!-- ============================================================ -->
-<!-- FILE: supabase.js (COMPLETE - FIXED)                         -->
-<!-- ============================================================ -->
-<script>
 // ================================================================
 // FILE: supabase.js - Database Connection & Functions
-// FIXED: Retry logic if supabase is not loaded yet
 // ================================================================
 
 const SUPABASE_URL = 'https://qwcfcqkgbwzabsjvkrse.supabase.co';
 const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3Y2ZjcWtnYnd6YWJzanZrcnNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1Mzk0NzIsImV4cCI6MjEwMDExNTQ3Mn0.mlC1lCjD8xhKnMP5YX4fxbehuwoH6KkfO6OtEgiGgnM';
 
+// Initialize Supabase client (will be set after library loads)
 let supabaseClient = null;
-let supabaseReady = false;
 
 function getSupabase() {
-    if (supabaseClient) return supabaseClient;
-    
-    if (typeof supabase !== 'undefined') {
-        supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        supabaseReady = true;
-        return supabaseClient;
-    }
-    
-    // Retry after 100ms if supabase not loaded yet
-    setTimeout(() => {
+    if (!supabaseClient) {
+        // Check if supabase library is loaded
         if (typeof supabase !== 'undefined') {
             supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            supabaseReady = true;
+            console.log('✅ Supabase client initialized');
+        } else {
+            console.warn('⚠️ Supabase library not loaded yet, will retry...');
+            // Try again after 200ms
+            setTimeout(() => {
+                if (typeof supabase !== 'undefined') {
+                    supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    console.log('✅ Supabase client initialized (delayed)');
+                }
+            }, 200);
         }
-    }, 100);
-    
-    return null;
+    }
+    return supabaseClient;
 }
 
 // ================================================================
@@ -319,6 +314,10 @@ async function updatePrizePool(amount) {
     return await setSetting('current_pool', String(amount));
 }
 
+// ================================================================
+// ADMIN PASSWORD FUNCTIONS
+// ================================================================
+
 async function getAdminPassword() {
     return await getSetting('admin_password') || '';
 }
@@ -367,6 +366,10 @@ async function resetAdminPassword(securityAnswer, newPassword) {
     return { success: false, error: 'Failed to reset password.' };
 }
 
+// ================================================================
+// AD SETTINGS FUNCTIONS
+// ================================================================
+
 async function getAdSetting(key) {
     return await getSetting(key) || '';
 }
@@ -375,6 +378,10 @@ async function updateAdSetting(key, value) {
     return await setSetting(key, value);
 }
 
+// ================================================================
+// BANNER FUNCTIONS
+// ================================================================
+
 async function getHomeBanner() {
     return await getSetting('home_banner_code') || '';
 }
@@ -382,6 +389,10 @@ async function getHomeBanner() {
 async function setHomeBanner(code) {
     return await setSetting('home_banner_code', code);
 }
+
+// ================================================================
+// BOT FUNCTIONS
+// ================================================================
 
 async function getBotEnabled() {
     const val = await getSetting('bot_enabled');
@@ -428,5 +439,4 @@ window.setBotEnabled = setBotEnabled;
 window.getSetting = getSetting;
 window.setSetting = setSetting;
 
-console.log('✅ Supabase.js loaded successfully! Supabase ready:', supabaseReady);
-</script>
+console.log('✅ Supabase.js loaded successfully!');
