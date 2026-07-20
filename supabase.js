@@ -41,7 +41,7 @@ async function getUser(username) {
 
 async function createUser(username, userId, referredBy) {
     const client = getSupabase();
-    if (!client) return null;
+    if (!client) return { success: false, error: 'Supabase not connected.' };
     const { data, error } = await client
         .from('users')
         .insert([{
@@ -59,9 +59,9 @@ async function createUser(username, userId, referredBy) {
         .single();
     if (error) {
         console.error('Error creating user:', error);
-        return null;
+        return { success: false, error: error.message };
     }
-    return data;
+    return { success: true, error: null, data: data };
 }
 
 async function updateUserStats(username, points, games, wins) {
