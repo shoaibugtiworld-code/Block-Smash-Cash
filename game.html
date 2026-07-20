@@ -129,19 +129,36 @@
         .game-over-overlay .score { font-size: 28px; font-weight: bold; color: #fff; }
         .game-over-overlay .high { font-size: 12px; color: #8888bb; margin-top: 4px; }
         .game-over-overlay .restart-btn {
-            margin-top: 16px;
-            padding: 12px 40px;
+            margin-top: 12px;
+            padding: 12px 30px;
             border: none;
             border-radius: 14px;
             background: linear-gradient(135deg, #00ddff, #0088ff);
             color: #fff;
-            font-size: 18px;
+            font-size: 16px;
             font-weight: bold;
             cursor: pointer;
             box-shadow: 0 8px 30px rgba(0, 136, 255, 0.4);
             transition: transform 0.2s;
+            width: 80%;
+            max-width: 260px;
         }
         .game-over-overlay .restart-btn:active { transform: scale(0.95); }
+        .game-over-overlay .reward-btn {
+            margin-top: 8px;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #ffd700, #ffaa00);
+            color: #000;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 80%;
+            max-width: 260px;
+        }
+        .game-over-overlay .reward-btn:active { transform: scale(0.95); }
 
         .notification {
             position: absolute;
@@ -206,7 +223,7 @@
 </head>
 <body>
 <div id="app">
-    <!-- گیم کا ہیڈر -->
+    <!-- Game Header -->
     <div class="game-header">
         <div class="item"><div class="lbl">Score</div><div class="val score" id="gameScore">0</div></div>
         <div class="item"><div class="lbl">Rank</div><div class="val rank" id="gameRank">#—</div></div>
@@ -219,10 +236,11 @@
         <canvas id="gameCanvas" width="400" height="620"></canvas>
         <div class="game-over-overlay" id="gameOverOverlay">
             <div class="title">GAME OVER</div>
-            <div class="sub">Better luck next time!</div>
+            <div class="sub" id="goSub">Better luck next time!</div>
             <div class="score" id="finalScore">0</div>
             <div class="high">High Score: <span id="finalHigh">0</span></div>
             <button class="restart-btn" id="restartBtn">🔄 PLAY AGAIN</button>
+            <button class="reward-btn" id="rewardBtn">🎬 Watch Ad for 2x/4x Score</button>
         </div>
         <div class="notification" id="notification"></div>
     </div>
@@ -240,24 +258,31 @@
         <a href="profile.html">👤<span>Profile</span></a>
         <a href="referral.html">🔗<span>Referral</span></a>
         <a href="admin.html" id="adminNavLink" style="display:none;">⚙️<span>Admin</span></a>
+        <a href="ads.html">📢<span>Ads</span></a>
     </div>
 </div>
 
+<script src="ads.js"></script>
 <script>
     // ================================================================
-    // BLOCK SMASH CASH - GAME (FULL PSYCHOLOGY EDITION)
+    // GAME CODE (FULL) + AD INTEGRATION
     // ================================================================
 
     (function() {
         'use strict';
 
+        // --- GAME CONSTANTS & STATE (same as before) ---
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const overlay = document.getElementById('gameOverOverlay');
         const restartBtn = document.getElementById('restartBtn');
+        const rewardBtn = document.getElementById('rewardBtn');
         const diffBadge = document.getElementById('diffBadge');
         const progressFill = document.getElementById('progressFill');
         const notification = document.getElementById('notification');
+        const finalScore = document.getElementById('finalScore');
+        const finalHigh = document.getElementById('finalHigh');
+        const goSub = document.getElementById('goSub');
 
         const SIZE = 50;
         const COLS = 8;
@@ -295,6 +320,7 @@
             10: { color: '#ffffff', glow: '#ffffaa', dmg: 8, speed: 12, count: 8, spread: 30, name: 'Cosmic', delay: 70 }
         };
 
+        // --- AUDIO ---
         function initAudio() {
             if (!audioCtx) audioCtx = new(window.AudioContext || window.webkitAudioContext)();
         }
@@ -430,6 +456,7 @@
             }
         }
 
+        // --- GAME FUNCTIONS ---
         function initGame() {
             grid = []; bullets = []; particles = []; gifts = []; coins = []; floatingTexts = [];
             currentScore = 0; gameOver = false; isPaused = true; playerX = 175;
@@ -449,6 +476,8 @@
             spawnRow();
             updateRank();
             showNotification('💥 Let\'s Go!', 'Smash for cash!');
+            // Reset the reward button visibility
+            rewardBtn.style.display = 'block';
         }
 
         function showNotification(text, sub) {
@@ -611,6 +640,7 @@
             }
         }
 
+        // --- MAIN GAME UPDATE ---
         function updateGame() {
             if (gameOver || isPaused) return;
             const elapsed = (Date.now() - gameStartTime) / 1000;
@@ -823,25 +853,95 @@
 
         function showGameOver() {
             overlay.classList.add('show');
-            document.getElementById('finalScore').textContent = currentScore;
-            document.getElementById('finalHigh').textContent = highScore;
+            finalScore.textContent = currentScore;
+            finalHigh.textContent = highScore;
             playPop(200, 0.5, 0.1);
             vibrate([80, 40, 80, 40, 150]);
             if (nearMissCount > 5) {
-                document.querySelector('.game-over-overlay .sub').textContent = 'So close! Keep going! 💪';
+                goSub.textContent = 'So close! Keep going! 💪';
             } else {
-                document.querySelector('.game-over-overlay .sub').textContent = 'Better luck next time!';
+                goSub.textContent = 'Better luck next time!';
+            }
+
+            // ===== AD INTEGRATION: Check if ad should show after game =====
+            if (typeof shouldShowAdAfterGame === 'function') {
+                if (shouldShowAdAfterGame()) {
+                    // Show ad before allowing restart
+                    restartBtn.style.display = 'none';
+                    rewardBtn.style.display = 'none';
+                    if (typeof showReplayAd === 'function') {
+                        showReplayAd(function() {
+                            restartBtn.style.display = 'block';
+                            rewardBtn.style.display = 'block';
+                            // Reset counter after ad
+                            if (typeof resetGameCounter === 'function') {
+                                resetGameCounter();
+                            }
+                        });
+                    }
+                }
             }
         }
 
+        // ===== RESTART GAME (with optional ad) =====
         function restartGame() {
-            if (gameOver) { initGame(); isPaused = false; }
+            initGame();
+            isPaused = false;
         }
 
         restartBtn.addEventListener('click', restartGame);
-        restartBtn.addEventListener('touchstart', function(e) { e.preventDefault(); restartGame(); }, { passive: false });
-        overlay.addEventListener('click', function(e) { if (e.target === overlay) restartGame(); });
+        restartBtn.addEventListener('touchstart', function(e) {
+            e.preventDefault();
+            restartGame();
+        }, { passive: false });
 
+        overlay.addEventListener('click', function(e) {
+            if (e.target === overlay) {
+                // Only restart if no ad is showing (buttons visible)
+                if (restartBtn.style.display !== 'none') {
+                    restartGame();
+                }
+            }
+        });
+
+        // ===== REWARD AD (2x/4x Score) =====
+        rewardBtn.addEventListener('click', function() {
+            if (typeof handleRewardAd === 'function') {
+                handleRewardAd(currentScore, function(newScore, multiplier) {
+                    // Apply bonus
+                    currentScore = newScore;
+                    document.getElementById('gameScore').textContent = currentScore;
+                    finalScore.textContent = currentScore;
+                    // Update high score if needed
+                    if (currentScore > highScore) {
+                        highScore = currentScore;
+                        localStorage.setItem('bs_highScore', highScore);
+                        document.getElementById('gameHigh').textContent = highScore;
+                        finalHigh.textContent = highScore;
+                    }
+                    // Show notification
+                    showNotification('🎉 ' + multiplier + 'x Bonus Applied!', 'New Score: ' + currentScore);
+                    // Hide reward button after use
+                    rewardBtn.style.display = 'none';
+                });
+            } else {
+                // Fallback: just give a random bonus
+                const multiplier = Math.random() < 0.3 ? 4 : 2;
+                currentScore = currentScore * multiplier;
+                document.getElementById('gameScore').textContent = currentScore;
+                finalScore.textContent = currentScore;
+                if (currentScore > highScore) {
+                    highScore = currentScore;
+                    localStorage.setItem('bs_highScore', highScore);
+                    document.getElementById('gameHigh').textContent = highScore;
+                    finalHigh.textContent = highScore;
+                }
+                showNotification('🎉 ' + multiplier + 'x Bonus Applied!', 'New Score: ' + currentScore);
+                rewardBtn.style.display = 'none';
+            }
+        });
+
+        // --- DRAW ---
         function drawGame() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             ctx.fillStyle = '#0b0626';
@@ -1086,9 +1186,16 @@
             this.classList.toggle('on', vibeOn);
         });
 
+        // --- SHOW ADMIN NAV ---
+        if (window.location.search.includes('admin=true')) {
+            document.getElementById('adminNavLink').style.display = 'flex';
+        }
+
+        // --- INIT ---
         initGame();
         gameLoop();
 
+        // Save high score periodically
         setInterval(() => {
             if (currentScore > highScore) {
                 highScore = currentScore;
@@ -1097,10 +1204,6 @@
             }
         }, 2000);
 
-        // Show admin nav if admin=true
-        if (window.location.search.includes('admin=true')) {
-            document.getElementById('adminNavLink').style.display = 'flex';
-        }
     })();
 </script>
 </body>
