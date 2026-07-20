@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Block Smash Cash - Admin</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            background: #0a0a1a;
+            font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+            color: #fff;
+        }
+        #app {
+            max-width: 420px;
+            width: 100%;
+            height: 100dvh;
+            max-height: 100dvh;
+            margin: 0 auto;
+            background: #12122a;
+            border-radius: 0;
+            padding: 16px 16px 8px;
+            border: 1px solid #2a2a5a;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        @media (min-width: 421px) {
+            #app {
+                border-radius: 24px;
+                height: 90vh;
+                max-height: 740px;
+                margin-top: 20px;
+            }
+        }
+        .content-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-right: 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .content-area::-webkit-scrollbar { width: 3px; }
+        .content-area::-webkit-scrollbar-thumb { background: #2a2a5a; border-radius: 10px; }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 4px 4px 8px;
+            border-bottom: 1px solid #2a2a5a;
+            flex-shrink: 0;
+        }
+        .admin-header h2 { font-size: 20px; color: #00ddff; }
+        .admin-header .badge {
+            font-size: 11px;
+            color: #ffaa00;
+            background: #1a1a3a;
+            padding: 4px 12px;
+            border-radius: 20px;
+            border: 1px solid #2a2a5a;
+        }
+
+        .admin-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+        .admin-stats .as {
+            background: #1a1a3a;
+            border-radius: 10px;
+            padding: 8px 4px;
+            text-align: center;
+            border: 1px solid #2a2a5a;
+        }
+        .admin-stats .as .num { font-size: 18px; font-weight: 700; color: #ffd700; }
+        .admin-stats .as .lbl { font-size: 8px; color: #8888bb; text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .prize-box {
+            background: #1a2a1a;
+            border: 1px solid #33aa55;
+            border-radius: 12px;
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+        .prize-box .label {
+            color: #66ff88;
+            font-weight: 600;
+            font-size: 13px;
+            flex: 1;
+            min-width: 100px;
+        }
+        .prize-box .label .current { color: #ffd700; font-size: 16px; }
+        .prize-box input {
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 2px solid #2a2a5a;
+            background: #0a0a1a;
+            color: #fff;
+            font-size: 14px;
+            outline: none;
+            width: 120px;
+            flex-shrink: 0;
+        }
+        .prize-box input:focus { border-color: #33aa55; }
+        .prize-box .update-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 10px;
+            background: #33aa55;
+            color: #fff;
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: transform 0.15s;
+            flex-shrink: 0;
+        }
+        .prize-box .update-btn:active { transform: scale(0.94); }
+        .prize-box .next-update {
+            color: #8888bb;
+            font-size: 10px;
+            width: 100%;
+            text-align: center;
+            margin-top: 4px;
+        }
+
+        .search-filter {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+        }
+        .search-filter input {
+            flex: 1;
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 2px solid #2a2a5a;
+            background: #0a0a1a;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+            min-width: 120px;
+        }
+        .search-filter input:focus { border-color: #00ddff; }
+        .search-filter select {
+            padding: 8px 12px;
+            border-radius: 10px;
+            border: 2px solid #2a2a5a;
+            background: #0a0a1a;
+            color: #fff;
+            font-size: 13px;
+            outline: none;
+            cursor: pointer;
+        }
+        .search-filter select:focus { border-color: #00ddff; }
+        .search-filter .clear-btn {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 10px;
+            background: #2a1a1a;
+            border: 1px solid #ff4444;
+            color: #ff4444;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .admin-user {
+            background: #1a1a3a;
+            border-radius: 12px;
+            padding: 10px;
+            border: 1px solid #2a2a5a;
+            flex-shrink: 0;
+        }
+        .admin-user .row1 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .admin-user .row1 .uname { font-weight: 600; color: #ddd; font-size: 15px; }
+        .admin-user .row1 .uid { font-size: 11px; color: #8888bb; }
+        .admin-user .row2 {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 4px;
+            font-size: 13px;
+            color: #aaa;
+        }
+        .admin-user .row2 .balance { color: #ffd700; font-weight: 600; }
+        .admin-user .row2 .status-badge {
+            font-size: 10px;
+            padding: 2px 10px;
+            border-radius: 12px;
+        }
+        .admin-user .row2 .status-badge.active { background: #1a2a1a; color: #66ff88; border: 1px solid #33aa55; }
+        .admin-user .row2 .status-badge.inactive { background: #2a1a1a; color: #ff6644; border: 1px solid #ff4444; }
+        .admin-user .row3 {
+            display: flex;
+            gap: 6px;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+        .admin-user .row3 button {
+            padding: 4px 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .admin-user .row3 button:active { transform: scale(0.94); }
+        .admin-user .row3 .approve { background: #66ff88; color: #000; }
+        .admin-user .row3 .reject { background: #ff4444; color: #fff; }
+        .admin-user .row3 .paid { background: #ffd700; color: #000; }
+        .admin-user .row3 .delete { background: #2a1a1a; border: 1px solid #ff4444; color: #ff4444; }
+
+        .admin-user .pending-badge {
+            background: #ffaa00;
+            color: #000;
+            padding: 2px 10px;
+            border-radius: 12px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        .logout-btn {
+            width: 100%;
+            padding: 10px;
+            border: none;
+            border-radius: 12px;
+            background: #2a1a1a;
+            border: 1px solid #ff4444;
+            color: #ff4444;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            flex-shrink: 0;
+            transition: transform 0.15s;
+        }
+        .logout-btn:active { transform: scale(0.96); }
+
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            background: #1a1a3a;
+            border-radius: 16px;
+            padding: 6px 2px;
+            margin-top: 8px;
+            border: 1px solid #2a2a5a;
+            flex-shrink: 0;
+            width: 100%;
+            overflow-x: auto;
+            gap: 2px;
+        }
+        .bottom-nav a {
+            background: none;
+            border: none;
+            color: #8888bb;
+            font-size: 10px;
+            padding: 4px 6px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.25s;
+            text-decoration: none;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1px;
+            min-width: 40px;
+            flex-shrink: 0;
+        }
+        .bottom-nav a .icon { font-size: 18px; line-height: 1; }
+        .bottom-nav a.active {
+            color: #00ddff;
+            background: rgba(0, 221, 255, 0.08);
+        }
+        .bottom-nav a:active { transform: scale(0.94); }
+
+        .login-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+        }
+        .login-screen .lock { font-size: 56px; }
+        .login-screen h2 { font-size: 24px; color: #00ddff; margin: 8px 0 4px; }
+        .login-screen p { color: #8888bb; font-size: 14px; margin-bottom: 16px; }
+        .login-screen input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            border: 2px solid #2a2a5a;
+            background: #0a0a1a;
+            color: #fff;
+            font-size: 16px;
+            outline: none;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        .login-screen input:focus { border-color: #00ddff; }
+        .login-screen .login-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 14px;
+            background: linear-gradient(135deg, #00ddff, #0088ff);
+            color: #fff;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .login-screen .login-btn:active { transform: scale(0.96); }
+        .login-screen .error { color: #ff6644; font-size: 13px; margin-top: 8px; }
+        .login-screen .setup-msg { color: #66ff88; font-size: 13px; margin-top: 8px; }
+        .hidden { display: none !important; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        .bot-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 999;
+            backdrop-filter: blur(6px);
+            animation: fadeIn 0.3s ease;
+        }
+        .bot-modal .box {
+            background: #1a1a3a;
+            border-radius: 24px;
+            padding: 30px 24px;
+            max-width: 380px;
+            width: 90%;
+            border: 2px solid #ffd700;
+            text-align: center;
+        }
+        .bot-modal .box h3 { font-size: 24px; color: #ffd700; margin-bottom: 4px; }
+        .bot-modal .box p { color: #aaa; font-size: 14px; margin-bottom: 14px; }
+        .bot-modal .box .question { font-size: 28px; font-weight: 700; color: #fff; margin-bottom: 10px; }
+        .bot-modal .box input {
+            width: 100%;
+            padding: 14px;
+            border-radius: 14px;
+            border: 2px solid #2a2a5a;
+            background: #0a0a1a;
+            color: #fff;
+            font-size: 20px;
+            text-align: center;
+            outline: none;
+            margin-bottom: 10px;
+        }
+        .bot-modal .box input:focus { border-color: #ffd700; }
+        .bot-modal .box .verify-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 14px;
+            background: #ffd700;
+            color: #000;
+            font-size: 18px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+        .bot-modal .box .verify-btn:active { transform: scale(0.96); }
+        .bot-modal .box .error-msg { color: #ff6644; font-size: 13px; margin-top: 8px; }
+
+        .no-users { text-align: center; padding: 20px; color: #8888bb; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div id="app">
+
+    <!-- ===== LOGIN SCREEN ===== -->
+    <div id="loginScreen" class="login-screen">
+        <div class="lock">🔐</div>
+        <h2>Admin Login</h2>
+        <p id="loginDesc">Enter your admin password to continue.</p>
+        <input type="password" id="adminPasswordInput" placeholder="Enter password..." />
+        <button class="login-btn" id="loginBtn">🔓 Login</button>
+        <div id="loginError" class="error"></div>
+        <div id="setupMsg" class="setup-msg hidden"></div>
+    </div>
+
+    <!-- ===== ADMIN DASHBOARD ===== -->
+    <div id="adminDashboard" class="hidden" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+
+        <div class="content-area">
+
+            <div class="admin-header">
+                <h2>⚙️ Admin Panel</h2>
+                <span class="badge" id="adminBadge">👤 0 users</span>
+            </div>
+
+            <div class="admin-stats">
+                <div class="as"><div class="num" id="aUsers">0</div><div class="lbl">Total</div></div>
+                <div class="as"><div class="num" id="aActive">0</div><div class="lbl">Active</div></div>
+                <div class="as"><div class="num" id="aPending">0</div><div class="lbl">Pending</div></div>
+                <div class="as"><div class="num" id="aTotalPool">₨ 0</div><div class="lbl">Pool</div></div>
+            </div>
+
+            <div class="prize-box">
+                <span class="label">💰 Prize Pool: <span class="current" id="currentPoolDisplay">₨ 0</span></span>
+                <input type="number" id="prizeInput" placeholder="Enter amount" min="0" />
+                <button class="update-btn" id="updatePrizeBtn">Update</button>
+                <div class="next-update" id="nextUpdateTime">⏳ Next auto-update: --</div>
+            </div>
+
+            <div class="search-filter">
+                <input type="text" id="searchInput" placeholder="🔍 Search username or ID..." />
+                <select id="filterSelect">
+                    <option value="all">All Users</option>
+                    <option value="active">Active Only</option>
+                    <option value="pending">Pending Withdrawals</option>
+                    <option value="inactive">Inactive</option>
+                </select>
+                <button class="clear-btn" id="clearSearchBtn">✕ Clear</button>
+            </div>
+
+            <div id="adminUserList"></div>
+
+            <button class="logout-btn" id="logoutAdminBtn">🚪 Logout</button>
+
+        </div>
+
+        <div class="bottom-nav">
+            <a href="index.html">🏠<span>Home</span></a>
+            <a href="leaderboard.html">🏆<span>Top</span></a>
+            <a href="profile.html">👤<span>Profile</span></a>
+            <a href="referral.html">🔗<span>Referral</span></a>
+            <a href="admin.html" class="active">⚙️<span>Admin</span></a>
+        </div>
+    </div>
+
+</div>
+
+<!-- ===== BOT TEST MODAL ===== -->
+<div id="botModal" class="bot-modal hidden">
+    <div class="box">
+        <h3>🤖 Verify You Are Human</h3>
+        <p>Complete this quick check to continue.</p>
+        <div class="question" id="botQuestion">5 + 3 = ?</div>
+        <input type="number" id="botAnswer" placeholder="Enter answer..." />
+        <button class="verify-btn" id="botVerifyBtn">✓ VERIFY</button>
+        <div id="botError" class="error-msg"></div>
+    </div>
+</div>
+
+<script>
+    (function() {
+        'use strict';
+
+        const ADMIN_PASSWORD_KEY = 'bs_admin_password';
+        const ADMIN_SESSION_KEY = 'bs_admin_session';
+        const BOT_VERIFIED_KEY = 'bs_bot_verified';
+        const BOT_TIMESTAMP_KEY = 'bs_bot_timestamp';
+        const USERS_KEY = 'bs_users';
+        const WITHDRAWALS_KEY = 'bs_withdrawals';
+        const POOL_KEY = 'bs_current_pool';
+        const POOL_UPDATE_KEY = 'bs_pool_last_update';
+        const REFERRALS_KEY = 'bs_referrals';
+
+        const loginScreen = document.getElementById('loginScreen');
+        const dashboard = document.getElementById('adminDashboard');
+        const passwordInput = document.getElementById('adminPasswordInput');
+        const loginBtn = document.getElementById('loginBtn');
+        const loginError = document.getElementById('loginError');
+        const setupMsg = document.getElementById('setupMsg');
+        const loginDesc = document.getElementById('loginDesc');
+        const logoutBtn = document.getElementById('logoutAdminBtn');
+
+        const searchInput = document.getElementById('searchInput');
+        const filterSelect = document.getElementById('filterSelect');
+        const clearSearchBtn = document.getElementById('clearSearchBtn');
+        const prizeInput = document.getElementById('prizeInput');
+        const updatePrizeBtn = document.getElementById('updatePrizeBtn');
+        const currentPoolDisplay = document.getElementById('currentPoolDisplay');
+        const nextUpdateTime = document.getElementById('nextUpdateTime');
+
+        const botModal = document.getElementById('botModal');
+        const botQuestion = document.getElementById('botQuestion');
+        const botAnswer = document.getElementById('botAnswer');
+        const botVerifyBtn = document.getElementById('botVerifyBtn');
+        const botError = document.getElementById('botError');
+
+        let adminPassword = localStorage.getItem(ADMIN_PASSWORD_KEY) || '';
+        let isLoggedIn = false;
+        let allUsers = [];
+        let allWithdrawals = [];
+        let allReferrals = [];
+        let currentPool = 0;
+        let poolLastUpdate = 0;
+
+        const botQuestions = [
+            { q: '5 + 3 = ?', a: 8 }, { q: '10 - 4 = ?', a: 6 },
+            { q: '7 + 2 = ?', a: 9 }, { q: '12 - 5 = ?', a: 7 },
+            { q: '6 + 6 = ?', a: 12 }, { q: '15 - 8 = ?', a: 7 },
+            { q: '4 + 9 = ?', a: 13 }, { q: '20 - 11 = ?', a: 9 }
+        ];
+        let currentBotQuestion = botQuestions[0];
+
+        function loadData() {
+            allUsers = JSON.parse(localStorage.getItem(USERS_KEY) || '[]');
+            allWithdrawals = JSON.parse(localStorage.getItem(WITHDRAWALS_KEY) || '[]');
+            allReferrals = JSON.parse(localStorage.getItem(REFERRALS_KEY) || '[]');
+            currentPool = parseFloat(localStorage.getItem(POOL_KEY) || '0');
+            poolLastUpdate = parseInt(localStorage.getItem(POOL_UPDATE_KEY) || '0');
+        }
+
+        function savePool() {
+            localStorage.setItem(POOL_KEY, String(currentPool));
+            localStorage.setItem(POOL_UPDATE_KEY, String(Date.now()));
+        }
+
+        function isBotVerified() {
+            const verified = localStorage.getItem(BOT_VERIFIED_KEY) === 'true';
+            const timestamp = parseInt(localStorage.getItem(BOT_TIMESTAMP_KEY) || '0');
+            return verified && (Date.now() - timestamp) < 3 * 60 * 60 * 1000;
+        }
+
+        function setBotVerified() {
+            localStorage.setItem(BOT_VERIFIED_KEY, 'true');
+            localStorage.setItem(BOT_TIMESTAMP_KEY, String(Date.now()));
+        }
+
+        function resetBotVerification() {
+            localStorage.removeItem(BOT_VERIFIED_KEY);
+            localStorage.removeItem(BOT_TIMESTAMP_KEY);
+        }
+
+        function showBotTest(callback) {
+            if (isBotVerified()) { if (callback) callback(); return; }
+            const q = botQuestions[Math.floor(Math.random() * botQuestions.length)];
+            currentBotQuestion = q;
+            botQuestion.textContent = q.q;
+            botAnswer.value = '';
+            botError.textContent = '';
+            botModal.classList.remove('hidden');
+
+            const newBtn = botVerifyBtn.cloneNode(true);
+            botVerifyBtn.parentNode.replaceChild(newBtn, botVerifyBtn);
+            newBtn.addEventListener('click', function() {
+                const val = parseInt(botAnswer.value.trim());
+                if (isNaN(val)) { botError.textContent = '❌ Please enter a valid number.'; return; }
+                if (val === currentBotQuestion.a) {
+                    setBotVerified();
+                    botModal.classList.add('hidden');
+                    if (callback) callback();
+                } else {
+                    botError.textContent = '❌ Wrong answer. Try again.';
+                    botAnswer.value = '';
+                    const newQ = botQuestions[Math.floor(Math.random() * botQuestions.length)];
+                    currentBotQuestion = newQ;
+                    botQuestion.textContent = newQ.q;
+                }
+            });
+            botAnswer.addEventListener('keydown', function(e) { if (e.key === 'Enter') newBtn.click(); });
+        }
+
+        function getNextUpdateTime() {
+            const last = poolLastUpdate || Date.now();
+            const next = last + 12 * 60 * 60 * 1000;
+            const d = new Date(next);
+            return d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        }
+
+        function checkAutoUpdate() {
+            const now = Date.now();
+            if (poolLastUpdate && (now - poolLastUpdate) >= 12 * 60 * 60 * 1000) {
+                const randomBoost = Math.floor(Math.random() * 10000) + 1000;
+                currentPool += randomBoost;
+                savePool();
+                loadData();
+                renderAdmin();
+                showToast('🔄 Auto-update: Pool increased by ₨ ' + randomBoost.toFixed(0));
+            }
+            if (nextUpdateTime) {
+                nextUpdateTime.textContent = '⏳ Next auto-update: ' + getNextUpdateTime();
+            }
+        }
+
+        function showToast(msg) {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed; bottom: 80px; left: 50%; transform: translateX(-50%);
+                background: #1a2a1a; border: 1px solid #33aa55; border-radius: 12px;
+                padding: 10px 20px; color: #66ff88; font-size: 14px; font-weight: 500;
+                z-index: 1000; max-width: 90%; text-align: center;
+                animation: fadeIn 0.3s ease; box-shadow: 0 8px 30px rgba(0,0,0,0.5);
+            `;
+            toast.textContent = msg;
+            document.body.appendChild(toast);
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                toast.style.transition = 'opacity 0.5s';
+                setTimeout(() => toast.remove(), 500);
+            }, 3000);
+        }
+
+        function checkAdminSession() {
+            const session = localStorage.getItem(ADMIN_SESSION_KEY);
+            if (session === 'true' && adminPassword) {
+                isLoggedIn = true;
+                loginScreen.classList.add('hidden');
+                dashboard.classList.remove('hidden');
+                loadData();
+                renderAdmin();
+                checkAutoUpdate();
+                showBotTest(function() {});
+                setInterval(checkAutoUpdate, 60000);
+            } else {
+                loginScreen.classList.remove('hidden');
+                dashboard.classList.add('hidden');
+                if (!adminPassword) {
+                    loginDesc.textContent = '🔑 Set your admin password (first time only).';
+                    loginBtn.textContent = '🔑 Set Password';
+                    setupMsg.classList.remove('hidden');
+                    setupMsg.textContent = '⚠️ This password cannot be changed later. Keep it safe!';
+                } else {
+                    loginDesc.textContent = 'Enter your admin password to continue.';
+                    loginBtn.textContent = '🔓 Login';
+                    setupMsg.classList.add('hidden');
+                }
+            }
+        }
+
+        loginBtn.addEventListener('click', function() {
+            const input = passwordInput.value.trim();
+            if (!input) { loginError.textContent = '❌ Please enter a password.'; return; }
+            if (!adminPassword) {
+                localStorage.setItem(ADMIN_PASSWORD_KEY, input);
+                adminPassword = input;
+                localStorage.setItem(ADMIN_SESSION_KEY, 'true');
+                loginError.textContent = '';
+                loginScreen.classList.add('hidden');
+                dashboard.classList.remove('hidden');
+                isLoggedIn = true;
+                loadData();
+                renderAdmin();
+                checkAutoUpdate();
+                showBotTest(function() {});
+                setInterval(checkAutoUpdate, 60000);
+                return;
+            }
+            if (input === adminPassword) {
+                localStorage.setItem(ADMIN_SESSION_KEY, 'true');
+                loginError.textContent = '';
+                loginScreen.classList.add('hidden');
+                dashboard.classList.remove('hidden');
+                isLoggedIn = true;
+                loadData();
+                renderAdmin();
+                checkAutoUpdate();
+                showBotTest(function() {});
+                setInterval(checkAutoUpdate, 60000);
+            } else {
+                loginError.textContent = '❌ Wrong password. Try again.';
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        });
+
+        passwordInput.addEventListener('keydown', function(e) { if (e.key === 'Enter') loginBtn.click(); });
+
+        logoutBtn.addEventListener('click', function() {
+            localStorage.removeItem(ADMIN_SESSION_KEY);
+            isLoggedIn = false;
+            loginScreen.classList.remove('hidden');
+            dashboard.classList.add('hidden');
+            passwordInput.value = '';
+            loginError.textContent = '';
+        });
+
+        updatePrizeBtn.addEventListener('click', function() {
+            const val = parseFloat(prizeInput.value.trim());
+            if (!val || val <= 0) { showToast('❌ Please enter a valid amount.'); return; }
+            currentPool = val;
+            savePool();
+            loadData();
+            renderAdmin();
+            prizeInput.value = '';
+            showToast('✅ Prize pool updated to ₨ ' + currentPool.toFixed(0));
+        });
+
+        function filterUsers() {
+            const query = searchInput.value.toLowerCase().trim();
+            const filter = filterSelect.value;
+            let filtered = allUsers;
+            if (query) {
+                filtered = filtered.filter(u =>
+                    u.username.toLowerCase().includes(query) ||
+                    (u.userId || '').toLowerCase().includes(query)
+                );
+            }
+            if (filter === 'active') {
+                filtered = filtered.filter(u => (u.totalGames || 0) > 0);
+            } else if (filter === 'inactive') {
+                filtered = filtered.filter(u => (u.totalGames || 0) === 0);
+            } else if (filter === 'pending') {
+                const pendingUsers = allWithdrawals.filter(w => w.status === 'pending').map(w => w.username);
+                filtered = filtered.filter(u => pendingUsers.includes(u.username));
+            }
+            return filtered;
+        }
+
+        searchInput.addEventListener('input', renderAdmin);
+        filterSelect.addEventListener('change', renderAdmin);
+        clearSearchBtn.addEventListener('click', function() {
+            searchInput.value = '';
+            filterSelect.value = 'all';
+            renderAdmin();
+        });
+
+        function renderAdmin() {
+            loadData();
+            const totalUsers = allUsers.length;
+            const activeUsers = allUsers.filter(u => (u.totalGames || 0) > 0).length;
+            const pendingCount = allWithdrawals.filter(w => w.status === 'pending').length;
+
+            document.getElementById('aUsers').textContent = totalUsers;
+            document.getElementById('aActive').textContent = activeUsers;
+            document.getElementById('aPending').textContent = pendingCount;
+            document.getElementById('aTotalPool').textContent = '₨ ' + currentPool.toFixed(0);
+            document.getElementById('adminBadge').textContent = '👤 ' + totalUsers + ' users';
+            document.getElementById('currentPoolDisplay').textContent = '₨ ' + currentPool.toFixed(0);
+            if (nextUpdateTime) {
+                nextUpdateTime.textContent = '⏳ Next auto-update: ' + getNextUpdateTime();
+            }
+
+            const filtered = filterUsers();
+            const container = document.getElementById('adminUserList');
+            if (filtered.length === 0) {
+                container.innerHTML = '<div class="no-users">No users found.</div>';
+                return;
+            }
+
+            const sorted = [...filtered].sort((a, b) => {
+                const aPending = allWithdrawals.some(w => w.username === a.username && w.status === 'pending') ? 1 : 0;
+                const bPending = allWithdrawals.some(w => w.username === b.username && w.status === 'pending') ? 1 : 0;
+                if (aPending !== bPending) return bPending - aPending;
+                return (b.totalPoints || 0) - (a.totalPoints || 0);
+            });
+
+            let html = '';
+            sorted.forEach(u => {
+                const isActive = (u.totalGames || 0) > 0;
+                const pendingWd = allWithdrawals.filter(w => w.username === u.username && w.status === 'pending');
+                const hasPending = pendingWd.length > 0;
+                const pendingAmount = hasPending ? pendingWd[0].amount : 0;
+
+                html += `
+                    <div class="admin-user">
+                        <div class="row1">
+                            <span class="uname">${u.username}</span>
+                            <span class="uid">🆔 ${u.userId || '—'}</span>
+                        </div>
+                        <div class="row2">
+                            <span>🎯 ${(u.totalPoints||0).toLocaleString()} pts</span>
+                            <span>🎮 ${u.totalGames||0} games</span>
+                            <span class="balance">₨ ${(u.balance||0).toFixed(0)}</span>
+                            <span class="status-badge ${isActive ? 'active' : 'inactive'}">${isActive ? '✅ Active' : '⏳ Inactive'}</span>
+                            ${hasPending ? `<span class="pending-badge">⏳ Pending: ₨ ${pendingAmount.toFixed(0)}</span>` : ''}
+                        </div>
+                        <div class="row3">
+                            ${hasPending ? `
+                                <button class="approve" onclick="window._adminApprove('${u.username}')">✅ Approve</button>
+                                <button class="reject" onclick="window._adminReject('${u.username}')">❌ Reject</button>
+                                <button class="paid" onclick="window._adminMarkPaid('${u.username}')">💸 Paid</button>
+                            ` : `
+                                <span style="font-size:12px;color:#888;">✅ No pending</span>
+                            `}
+                            <button class="delete" onclick="window._adminDeleteUser('${u.username}')">🗑️ Delete</button>
+                        </div>
+                    </div>
+                `;
+            });
+            container.innerHTML = html;
+        }
+
+        window._adminApprove = function(username) {
+            const idx = allWithdrawals.findIndex(w => w.username === username && w.status === 'pending');
+            if (idx === -1) { showToast('❌ No pending request for ' + username); return; }
+            const txnId = prompt('Enter Transaction ID (TXN ID) for this withdrawal:', 'TXN-' + String(Date.now()).slice(-6));
+            if (txnId === null) return;
+            if (txnId.trim() === '') { showToast('❌ TXN ID cannot be empty.'); return; }
+            allWithdrawals[idx].status = 'done';
+            allWithdrawals[idx].txnId = txnId.trim();
+            localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(allWithdrawals));
+            showToast('✅ Withdrawal approved for ' + username + ' with TXN: ' + txnId.trim());
+            renderAdmin();
+        };
+
+        window._adminReject = function(username) {
+            const idx = allWithdrawals.findIndex(w => w.username === username && w.status === 'pending');
+            if (idx === -1) { showToast('❌ No pending request for ' + username); return; }
+            const wd = allWithdrawals[idx];
+            const user = allUsers.find(u => u.username === username);
+            if (user) { user.balance = (user.balance || 0) + wd.amount; localStorage.setItem(USERS_KEY, JSON.stringify(allUsers)); }
+            allWithdrawals.splice(idx, 1);
+            localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(allWithdrawals));
+            showToast('❌ Withdrawal rejected for ' + username + '. Balance refunded.');
+            renderAdmin();
+        };
+
+        window._adminMarkPaid = function(username) {
+            const idx = allWithdrawals.findIndex(w => w.username === username && w.status === 'pending');
+            if (idx === -1) { showToast('❌ No pending request for ' + username); return; }
+            allWithdrawals[idx].status = 'done';
+            localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(allWithdrawals));
+            showToast('💸 Marked as paid for ' + username);
+            renderAdmin();
+        };
+
+        window._adminDeleteUser = function(username) {
+            if (!confirm('Delete user "' + username + '" and all their data?')) return;
+            allUsers = allUsers.filter(u => u.username !== username);
+            localStorage.setItem(USERS_KEY, JSON.stringify(allUsers));
+            allWithdrawals = allWithdrawals.filter(w => w.username !== username);
+            localStorage.setItem(WITHDRAWALS_KEY, JSON.stringify(allWithdrawals));
+            allReferrals = allReferrals.filter(r => r.referrer !== username && r.referee !== username);
+            localStorage.setItem(REFERRALS_KEY, JSON.stringify(allReferrals));
+            showToast('🗑️ User deleted: ' + username);
+            renderAdmin();
+        };
+
+        setInterval(() => {
+            resetBotVerification();
+            if (isLoggedIn) showBotTest(function() {});
+        }, 3 * 60 * 60 * 1000);
+
+        checkAdminSession();
+        setInterval(() => { if (isLoggedIn) renderAdmin(); }, 30000);
+
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden && isLoggedIn) {
+                checkAutoUpdate();
+                renderAdmin();
+            }
+        });
+
+    })();
+</script>
+</body>
+</html>
