@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supabase Connection Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+    <style>
+        body { background: #0a0a1a; color: #fff; font-family: 'Segoe UI', Arial, sans-serif; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .box { background: #12122a; padding: 30px; border-radius: 16px; border: 1px solid #2a2a5a; max-width: 500px; width: 100%; }
+        h1 { color: #00ddff; font-size: 24px; margin-bottom: 16px; }
+        .status { padding: 12px; border-radius: 8px; margin: 8px 0; }
+        .success { background: #1a2a1a; color: #66ff88; border: 1px solid #33aa55; }
+        .error { background: #2a1a1a; color: #ff6644; border: 1px solid #ff4444; }
+        .info { background: #1a1a3a; color: #88ccff; border: 1px solid #2a2a5a; }
+        button { background: #00ddff; color: #000; border: none; padding: 12px 24px; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 12px; width: 100%; }
+        button:active { transform: scale(0.96); }
+        pre { background: #0a0a1a; padding: 12px; border-radius: 8px; overflow: auto; font-size: 12px; color: #aaa; max-height: 200px; margin-top: 10px; }
+    </style>
+</head>
+<body>
+<div class="box">
+    <h1>🔌 Supabase Connection Test</h1>
+    <div id="status" class="status info">⏳ Connecting to Supabase...</div>
+    <button id="testBtn">▶ Test Connection</button>
+    <pre id="output">Click "Test Connection" to start...</pre>
+</div>
+
+<script>
+    const SUPABASE_URL = 'https://qwcfcqkgbwzabsjvkrse.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3Y2ZjcWtnYnd6YWJzanZrcnNlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODQ1Mzk0NzIsImV4cCI6MjEwMDExNTQ3Mn0.mlC1lCjD8xhKnMP5YX4fxbehuwoH6KkfO6OtEgiGgnM';
+
+    const statusEl = document.getElementById('status');
+    const outputEl = document.getElementById('output');
+    const testBtn = document.getElementById('testBtn');
+
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    async function testConnection() {
+        statusEl.textContent = '⏳ Testing...';
+        statusEl.className = 'status info';
+        outputEl.textContent = '⏳ Sending request to Supabase...';
+
+        try {
+            const { data, error } = await supabase
+                .from('users')
+                .select('*')
+                .limit(5);
+
+            if (error) {
+                statusEl.textContent = '❌ ERROR: ' + error.message;
+                statusEl.className = 'status error';
+                outputEl.textContent = 'Error Details:\n' + JSON.stringify(error, null, 2);
+                return;
+            }
+
+            statusEl.textContent = '✅ SUCCESS! Connected to Supabase!';
+            statusEl.className = 'status success';
+            outputEl.textContent = '✅ Connection successful!\n\nFound ' + (data ? data.length : 0) + ' users in database.\n\nData:\n' + JSON.stringify(data, null, 2);
+        } catch (err) {
+            statusEl.textContent = '❌ EXCEPTION: ' + err.message;
+            statusEl.className = 'status error';
+            outputEl.textContent = 'Exception:\n' + err.message + '\n\nStack:\n' + err.stack;
+        }
+    }
+
+    testBtn.addEventListener('click', testConnection);
+    setTimeout(testConnection, 500);
+</script>
+</body>
+</html>
