@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Login - Block Smash Cash</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            background: #0a0a1a;
+            font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+            color: #fff;
+        }
+        #app {
+            max-width: 420px;
+            width: 100%;
+            height: 100dvh;
+            max-height: 100dvh;
+            margin: 0 auto;
+            background: #12122a;
+            border-radius: 0;
+            padding: 24px 20px 16px;
+            border: 1px solid #2a2a5a;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        @media (min-width: 421px) {
+            #app {
+                border-radius: 24px;
+                height: 90vh;
+                max-height: 740px;
+                margin-top: 20px;
+            }
+        }
+
+        .login-box {
+            width: 100%;
+            max-width: 340px;
+            text-align: center;
+        }
+        .login-box .logo {
+            font-size: 64px;
+            margin-bottom: 4px;
+        }
+        .login-box h1 {
+            font-size: 28px;
+            font-weight: 800;
+            color: #00ddff;
+            text-shadow: 0 0 30px rgba(0, 221, 255, 0.25);
+            letter-spacing: 1px;
+        }
+        .login-box .tagline {
+            color: #ffd700;
+            font-size: 14px;
+            font-weight: 600;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+        }
+
+        .login-box .input-group {
+            margin-bottom: 12px;
+            text-align: left;
+        }
+        .login-box .input-group label {
+            display: block;
+            font-size: 12px;
+            color: #8888bb;
+            margin-bottom: 4px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .login-box .input-group input {
+            width: 100%;
+            padding: 14px 16px;
+            border-radius: 14px;
+            border: 2px solid #2a2a5a;
+            background: #0a0a1a;
+            color: #fff;
+            font-size: 18px;
+            outline: none;
+            transition: border 0.3s;
+            text-align: center;
+        }
+        .login-box .input-group input:focus {
+            border-color: #00ddff;
+        }
+        .login-box .input-group input:disabled {
+            opacity: 0.5;
+        }
+
+        .login-box .ref-display {
+            background: #1a2a3a;
+            border: 1px solid #2a5a7a;
+            border-radius: 12px;
+            padding: 10px 14px;
+            margin-bottom: 16px;
+            text-align: center;
+            font-size: 13px;
+            color: #88ccff;
+            word-break: break-all;
+        }
+        .login-box .ref-display .label {
+            color: #8888bb;
+            font-size: 11px;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .login-box .login-btn {
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 16px;
+            font-size: 20px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #00ddff, #0088ff);
+            color: #fff;
+            cursor: pointer;
+            box-shadow: 0 8px 35px rgba(0, 136, 255, 0.35);
+            transition: transform 0.15s;
+            margin-top: 6px;
+        }
+        .login-box .login-btn:active {
+            transform: scale(0.96);
+        }
+        .login-box .login-btn:disabled {
+            opacity: 0.5;
+        }
+
+        .login-box .warning {
+            font-size: 12px;
+            color: #ff6644;
+            background: #2a1a1a;
+            padding: 10px 14px;
+            border-radius: 10px;
+            border-left: 3px solid #ff6644;
+            margin-top: 12px;
+            text-align: left;
+        }
+        .login-box .error-msg {
+            color: #ff6644;
+            font-size: 13px;
+            margin-top: 8px;
+            min-height: 20px;
+        }
+        .login-box .success-msg {
+            color: #66ff88;
+            font-size: 13px;
+            margin-top: 8px;
+            min-height: 20px;
+        }
+
+        .login-box .footer-text {
+            font-size: 11px;
+            color: #555588;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="login-box">
+        <div class="logo">💵</div>
+        <h1>BLOCK SMASH CASH</h1>
+        <div class="tagline">💰 Play · Earn · Win</div>
+
+        <div class="input-group">
+            <label>👤 Enter Username</label>
+            <input type="text" id="usernameInput" placeholder="e.g. KingKhan" maxlength="20" autocomplete="off" />
+        </div>
+
+        <!-- Referral Display (auto-filled from URL) -->
+        <div class="ref-display" id="refDisplay" style="display:none;">
+            <span class="label">🔗 Referred by</span>
+            <span id="refCodeDisplay">—</span>
+        </div>
+
+        <button class="login-btn" id="loginBtn">▶ PLAY NOW</button>
+
+        <div id="statusMsg" class="error-msg"></div>
+
+        <div class="warning">
+            ⚠️ Username can only be set ONCE.<br>
+            If you forget it, your account is lost.
+        </div>
+
+        <div class="footer-text">🔒 No password required · Just your unique username</div>
+    </div>
+</div>
+
+<script>
+    // ================================================================
+    // LOGIN PAGE - Username + Referral auto-detect
+    // ================================================================
+
+    (function() {
+        'use strict';
+
+        const usernameInput = document.getElementById('usernameInput');
+        const loginBtn = document.getElementById('loginBtn');
+        const statusMsg = document.getElementById('statusMsg');
+        const refDisplay = document.getElementById('refDisplay');
+        const refCodeDisplay = document.getElementById('refCodeDisplay');
+
+        // --- Get referral from URL ---
+        function getReferralFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            return params.get('ref') || '';
+        }
+
+        const refCode = getReferralFromURL();
+
+        // --- Check if already logged in ---
+        function checkAlreadyLoggedIn() {
+            const username = localStorage.getItem('bs_username');
+            if (username) {
+                // Already logged in, redirect to home
+                window.location.href = 'index.html';
+                return true;
+            }
+            return false;
+        }
+
+        // --- Show referral if present ---
+        if (refCode) {
+            refDisplay.style.display = 'block';
+            refCodeDisplay.textContent = refCode;
+        }
+
+        // --- Handle login ---
+        function handleLogin() {
+            const username = usernameInput.value.trim();
+
+            // Validation
+            if (!username) {
+                statusMsg.textContent = '❌ Please enter a username.';
+                statusMsg.className = 'error-msg';
+                return;
+            }
+            if (username.length < 3) {
+                statusMsg.textContent = '❌ Username must be at least 3 characters.';
+                statusMsg.className = 'error-msg';
+                return;
+            }
+            if (username.length > 20) {
+                statusMsg.textContent = '❌ Username too long (max 20 characters).';
+                statusMsg.className = 'error-msg';
+                return;
+            }
+            // Only letters and numbers allowed
+            if (!/^[a-zA-Z0-9]+$/.test(username)) {
+                statusMsg.textContent = '❌ Only letters and numbers allowed.';
+                statusMsg.className = 'error-msg';
+                return;
+            }
+
+            // Check if username already exists
+            let users = [];
+            try {
+                users = JSON.parse(localStorage.getItem('bs_users')) || [];
+            } catch(e) { users = []; }
+
+            const existing = users.find(u => u.username.toLowerCase() === username.toLowerCase());
+            if (existing) {
+                // Username exists - login
+                localStorage.setItem('bs_username', existing.username);
+                statusMsg.textContent = '✅ Welcome back, ' + existing.username + '!';
+                statusMsg.className = 'success-msg';
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 500);
+                return;
+            }
+
+            // --- New user: create account ---
+            // Generate User ID
+            const userId = 'BSC' + String(Date.now()).slice(-6) + String(Math.floor(Math.random() * 1000)).padStart(3, '0');
+
+            const newUser = {
+                username: username,
+                userId: userId,
+                totalPoints: 0,
+                totalGames: 0,
+                totalWins: 0,
+                balance: 0,
+                availableBalance: 0,
+                referredBy: refCode || null,
+                joined: new Date().toISOString()
+            };
+
+            users.push(newUser);
+            localStorage.setItem('bs_users', JSON.stringify(users));
+
+            // --- Save referral if exists ---
+            if (refCode) {
+                let referrals = [];
+                try {
+                    referrals = JSON.parse(localStorage.getItem('bs_referrals')) || [];
+                } catch(e) { referrals = []; }
+                // Check if already referred
+                const already = referrals.find(r => r.referee === username);
+                if (!already) {
+                    referrals.push({
+                        referrer: refCode,
+                        referee: username,
+                        active: false, // will become active after playing
+                        date: new Date().toISOString()
+                    });
+                    localStorage.setItem('bs_referrals', JSON.stringify(referrals));
+                }
+            }
+
+            // Save username and redirect
+            localStorage.setItem('bs_username', username);
+            statusMsg.textContent = '✅ Account created! Welcome, ' + username + '!';
+            statusMsg.className = 'success-msg';
+            setTimeout(() => {
+                window.location.href = 'index.html';
+            }, 500);
+        }
+
+        // --- Events ---
+        loginBtn.addEventListener('click', handleLogin);
+
+        usernameInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                handleLogin();
+            }
+        });
+
+        // Auto-focus
+        usernameInput.focus();
+
+        // Check if already logged in
+        if (checkAlreadyLoggedIn()) {
+            return;
+        }
+
+        // --- If no username exists but there's a referral, show message ---
+        if (refCode) {
+            statusMsg.textContent = '🔗 You were referred by ' + refCode + '!';
+            statusMsg.className = 'success-msg';
+            setTimeout(() => {
+                statusMsg.textContent = '';
+                statusMsg.className = 'error-msg';
+            }, 3000);
+        }
+
+    })();
+</script>
+</body>
+</html>
