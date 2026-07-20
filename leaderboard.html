@@ -219,7 +219,11 @@
 <script>
     // ================================================================
     // LEADERBOARD - WITH SUPABASE + TIERED PRIZE SYSTEM
+    // Vercel Clean URL | 30th July 2026
     // ================================================================
+
+    // --- Vercel Base URL ---
+    const BASE_URL = 'https://block-smash-cash.vercel.app';
 
     // --- BOT VERIFICATION CHECK (every 3 hours) ---
     function checkBotVerification() {
@@ -229,7 +233,7 @@
 
         if (!verified || (Date.now() - timestamp) >= threeHours) {
             const currentPage = 'leaderboard.html';
-            window.location.href = 'bot.html?return=' + encodeURIComponent(currentPage);
+            window.location.href = BASE_URL + '/bot.html?return=' + encodeURIComponent(currentPage);
         }
     }
 
@@ -240,14 +244,14 @@
     (async function() {
         const username = localStorage.getItem('bs_username');
         if (!username) {
-            window.location.href = 'login.html';
+            window.location.href = BASE_URL + '/login.html';
             return;
         }
 
         const user = await window.getUser(username);
         if (!user) {
             localStorage.removeItem('bs_username');
-            window.location.href = 'login.html';
+            window.location.href = BASE_URL + '/login.html';
             return;
         }
 
@@ -283,6 +287,17 @@
     }
 
     // ================================================================
+    // GET WITHDRAWAL DATE (30th July 2026)
+    // ================================================================
+    function getNextWithdrawalDate() {
+        const d = new Date();
+        let month = d.getMonth(), year = d.getFullYear(), day = 30;
+        if (d.getDate() > 30) { month++; if (month > 11) { month = 0; year++; } }
+        const months = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+        return day + ' ' + months[month] + ' ' + year;
+    }
+
+    // ================================================================
     // RENDER LEADERBOARD
     // ================================================================
     async function renderLeaderboard() {
@@ -292,14 +307,8 @@
             const pool = await window.getPrizePool();
             const currentUser = localStorage.getItem('bs_username');
 
-            // Get referrals for bonus calculation
-            let allReferrals = [];
-            try {
-                // We need to get all referrals, but since we don't have a function for all,
-                // we'll fetch per user or use a simpler approach
-                // For now, we'll use the existing data structure
-                allReferrals = JSON.parse(localStorage.getItem('bs_referrals')) || [];
-            } catch(e) { allReferrals = []; }
+            // Get all referrals for bonus calculation
+            const allReferrals = await window.getAllReferrals() || [];
 
             // Calculate final score with referral bonus
             const usersWithBonus = users.map(u => {
@@ -317,7 +326,7 @@
 
             // Update stats
             document.getElementById('lbUsers').textContent = users.length;
-            document.getElementById('lbPool').textContent = '₨ ' + pool.toFixed(0);
+            document.getElementById('lbPool').textContent = '₨ ' + (pool || 0).toFixed(0);
             document.getElementById('lbWinners').textContent = Math.min(users.length, 500);
             document.getElementById('lbPhaseTag').textContent = 'Phase ' + (Math.floor(users.length / 100) + 1);
 
@@ -375,9 +384,13 @@
                 document.getElementById('lbYourRank').textContent = 'Login to see your rank.';
             }
 
+            // Show next withdrawal date in footer
+            const footer = document.getElementById('lbYourRank');
+            footer.innerHTML += ' | 📅 ' + getNextWithdrawalDate();
+
         } catch (error) {
             console.error('Error rendering leaderboard:', error);
-            document.getElementById('lbList').innerHTML = '<div style="text-align:center;padding:30px;color:#888;">Error loading leaderboard. Please try again.</div>';
+            document.getElementById('lbList').innerHTML = '<div style="text-align:center;padding:30px;color:#888;">Error loading leaderboard. Please refresh.</div>';
         }
     }
 
