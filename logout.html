@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Logout - Block Smash Cash</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        html, body {
+            height: 100%;
+            overflow: hidden;
+            background: #0a0a1a;
+            font-family: 'Segoe UI', system-ui, Arial, sans-serif;
+            color: #fff;
+        }
+        #app {
+            max-width: 420px;
+            width: 100%;
+            height: 100dvh;
+            max-height: 100dvh;
+            margin: 0 auto;
+            background: #12122a;
+            border-radius: 0;
+            padding: 24px 20px 16px;
+            border: 1px solid #2a2a5a;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        @media (min-width: 421px) {
+            #app {
+                border-radius: 24px;
+                height: 90vh;
+                max-height: 740px;
+                margin-top: 20px;
+            }
+        }
+
+        .logout-box {
+            width: 100%;
+            max-width: 340px;
+            text-align: center;
+        }
+        .logout-box .icon {
+            font-size: 64px;
+            margin-bottom: 8px;
+        }
+        .logout-box h1 {
+            font-size: 26px;
+            font-weight: 700;
+            color: #ff66aa;
+        }
+        .logout-box p {
+            color: #aaa;
+            font-size: 15px;
+            margin: 8px 0 20px 0;
+        }
+        .logout-box .username-display {
+            background: #1a1a3a;
+            border: 1px solid #2a2a5a;
+            border-radius: 12px;
+            padding: 12px 16px;
+            margin-bottom: 20px;
+            font-size: 18px;
+            font-weight: 600;
+            color: #00ddff;
+        }
+        .logout-box .btn-group {
+            display: flex;
+            gap: 12px;
+        }
+        .logout-box .btn-group button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: 14px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.15s;
+        }
+        .logout-box .btn-group button:active {
+            transform: scale(0.96);
+        }
+        .logout-box .btn-group .yes-btn {
+            background: #ff4444;
+            color: #fff;
+        }
+        .logout-box .btn-group .no-btn {
+            background: #2a2a5a;
+            color: #aaa;
+        }
+        .logout-box .redirect-msg {
+            color: #8888bb;
+            font-size: 13px;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="logout-box">
+        <div class="icon">🚪</div>
+        <h1>Logout</h1>
+        <p>Are you sure you want to logout?</p>
+
+        <div class="username-display" id="usernameDisplay">—</div>
+
+        <div class="btn-group">
+            <button class="yes-btn" id="logoutYesBtn">✅ Yes, Logout</button>
+            <button class="no-btn" id="logoutNoBtn">❌ Cancel</button>
+        </div>
+
+        <div class="redirect-msg" id="redirectMsg"></div>
+    </div>
+</div>
+
+<script>
+    // ================================================================
+    // LOGOUT PAGE - Confirmation before logout
+    // ================================================================
+
+    (function() {
+        'use strict';
+
+        const usernameDisplay = document.getElementById('usernameDisplay');
+        const yesBtn = document.getElementById('logoutYesBtn');
+        const noBtn = document.getElementById('logoutNoBtn');
+        const redirectMsg = document.getElementById('redirectMsg');
+
+        // --- Get current username ---
+        const username = localStorage.getItem('bs_username');
+
+        if (!username) {
+            // Already logged out, redirect to login
+            window.location.href = 'login.html';
+            return;
+        }
+
+        usernameDisplay.textContent = '👤 ' + username;
+
+        // --- Yes: Logout ---
+        yesBtn.addEventListener('click', function() {
+            localStorage.removeItem('bs_username');
+            redirectMsg.textContent = '✅ Logged out successfully! Redirecting...';
+            redirectMsg.style.color = '#66ff88';
+            yesBtn.disabled = true;
+            noBtn.disabled = true;
+            setTimeout(() => {
+                window.location.href = 'login.html';
+            }, 1000);
+        });
+
+        // --- No: Cancel ---
+        noBtn.addEventListener('click', function() {
+            window.location.href = 'index.html';
+        });
+
+        // --- Keyboard shortcut: Enter = Yes, Escape = No ---
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                yesBtn.click();
+            } else if (e.key === 'Escape') {
+                noBtn.click();
+            }
+        });
+
+    })();
+</script>
+</body>
+</html>
