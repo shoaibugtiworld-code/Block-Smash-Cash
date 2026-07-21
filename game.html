@@ -1005,8 +1005,7 @@
         rewardBtn.addEventListener('click', function() {
             if (rewardBtn.disabled) return;
             rewardBtn.disabled = true;
-            showRewardedAd(function onSuccess() {
-                const multiplier = Math.random() < 0.3 ? 4 : 2;
+            showRewardedAd(function onSuccess(multiplier) {
                 currentScore = currentScore * multiplier;
                 document.getElementById('gameScore').textContent = currentScore;
                 finalScore.textContent = currentScore;
