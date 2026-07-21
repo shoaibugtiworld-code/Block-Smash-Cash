@@ -4,7 +4,6 @@
   "description": "Smash the Blocks. Earn Real Cash.",
   "start_url": "/index.html",
   "id": "/index.html",
-  "scope": "/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
   "orientation": "portrait",
