@@ -364,5 +364,14 @@
 
     setInterval(renderLeaderboard, 60000);
 </script>
+    <script>
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function() {
+        navigator.serviceWorker.register('/service-worker.js')
+            .then(function(reg) { console.log('✅ Service worker registered'); })
+            .catch(function(err) { console.log('❌ Service worker failed:', err); });
+    });
+}
+</script>
 </body>
 </html>
