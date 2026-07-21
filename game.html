@@ -11,6 +11,7 @@
     <meta name="theme-color" content="#00ddff">
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="supabase.js"></script>
+    <script src="ads.js"></script>
     <style>
         * {
             margin: 0;
@@ -354,24 +355,34 @@
         let gamesPlayedCount = parseInt(localStorage.getItem('bs_gamesPlayed')) || 0;
 
         function showInterstitialAd(onComplete) {
+        function showInterstitialAd(onComplete) {
             showNotification('📺 Loading Ad...', 'Please wait');
-            // TODO: swap this block for your real interstitial ad call.
-            // Call onComplete() only once the ad has actually closed.
-            setTimeout(() => {
-                notification.classList.remove('show');
-                if (onComplete) onComplete();
-            }, 1500);
+            if (typeof window.showReplayAd === 'function') {
+                window.showReplayAd(function () {
+                    notification.classList.remove('show');
+                    if (onComplete) onComplete();
+                });
+            } else {
+                console.warn('ads.js not loaded: showReplayAd missing');
+                setTimeout(() => {
+                    notification.classList.remove('show');
+                    if (onComplete) onComplete();
+                }, 1000);
+            }
         }
 
         function showRewardedAd(onSuccess, onFail) {
             showNotification('📺 Loading Ad...', 'Please wait');
-            // TODO: swap this block for your real rewarded ad call.
-            // Call onSuccess() only if the user watched the ad to completion,
-            // otherwise call onFail().
-            setTimeout(() => {
-                notification.classList.remove('show');
-                if (onSuccess) onSuccess();
-            }, 1500);
+            if (typeof window.showRewardAd === 'function' && typeof window.getRandomMultiplier === 'function') {
+                const multiplier = window.getRandomMultiplier();
+                window.showRewardAd(multiplier, function (bonus) {
+                    notification.classList.remove('show');
+                    if (onSuccess) onSuccess(bonus);
+                });
+            } else {
+                console.warn('ads.js not loaded: showRewardAd/getRandomMultiplier missing');
+                if (onFail) onFail();
+            }
         }
 
         const weaponConfigs = {
