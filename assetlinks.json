@@ -1,8 +1,0 @@
-[{
-  "relation": ["delegate_permission/common.handle_all_urls"],
-  "target": {
-    "namespace": "android_app",
-    "package_name": "app.vercel.block_smash_cash.twa",
-    "sha256_cert_fingerprints": ["41:D6:A9:EE:02:92:68:1C:40:3B:CB:59:67:FC:07:91:65:EF:F6:23:71:7E:37:92:31:21:8B:27:0F:90:8B:3C"]
-  }
-}]
