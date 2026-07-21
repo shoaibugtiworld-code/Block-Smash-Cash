@@ -10,7 +10,7 @@
 
     // ---- EDIT THESE FOR YOUR APP ----
     const APP_NAME = 'Block Smash Cash';
-    const APP_SUBTITLE = '10,000+ Installs';
+    const APP_SUBTITLE = 'Earn Real Cash';
     const APK_DOWNLOAD_URL = 'https://block-smash-cash.vercel.app/SmashCash.apk'; // your APK file link
     const APP_ICON_URL = '/192.png';
     const APK_PACKAGE_NAME = 'app.vercel.block_smash_cash.twa'; // your TWA package name
