@@ -151,6 +151,7 @@
             max-width: 260px;
         }
         .game-over-overlay .restart-btn:active { transform: scale(0.95); }
+        .game-over-overlay .restart-btn:disabled { opacity: 0.5; cursor: not-allowed; }
         .game-over-overlay .reward-btn {
             margin-top: 8px;
             padding: 12px 30px;
@@ -166,6 +167,7 @@
             max-width: 260px;
         }
         .game-over-overlay .reward-btn:active { transform: scale(0.95); }
+        .game-over-overlay .reward-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
         .notification {
             position: absolute;
@@ -343,6 +345,35 @@
         let currentMaxLevel = 1;
         let gameStartTime = 0, gameDuration = 0, waveTimer = 0, comboCount = 0, nearMissCount = 0;
 
+        // ------------------------------------------------------------
+        // AD SYSTEM (replace the setTimeout stubs below with your real
+        // Ad SDK calls — e.g. AdMob / Unity Ads / IronSource). Each
+        // function just needs to call onComplete/onSuccess when the ad
+        // has actually finished playing.
+        // ------------------------------------------------------------
+        let gamesPlayedCount = parseInt(localStorage.getItem('bs_gamesPlayed')) || 0;
+
+        function showInterstitialAd(onComplete) {
+            showNotification('📺 Loading Ad...', 'Please wait');
+            // TODO: swap this block for your real interstitial ad call.
+            // Call onComplete() only once the ad has actually closed.
+            setTimeout(() => {
+                notification.classList.remove('show');
+                if (onComplete) onComplete();
+            }, 1500);
+        }
+
+        function showRewardedAd(onSuccess, onFail) {
+            showNotification('📺 Loading Ad...', 'Please wait');
+            // TODO: swap this block for your real rewarded ad call.
+            // Call onSuccess() only if the user watched the ad to completion,
+            // otherwise call onFail().
+            setTimeout(() => {
+                notification.classList.remove('show');
+                if (onSuccess) onSuccess();
+            }, 1500);
+        }
+
         const weaponConfigs = {
             1: { color: '#ffcc00', glow: '#ffaa00', dmg: 1, speed: 7, count: 1, spread: 0, name: 'Pistol', delay: 350 },
             2: { color: '#00ffff', glow: '#00ccff', dmg: 1, speed: 8, count: 2, spread: 12, name: 'Dual', delay: 320 },
@@ -407,7 +438,7 @@
                 gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.3);
                 osc.start(audioCtx.currentTime);
                 osc.stop(audioCtx.currentTime + 0.3);
-            } catch (e) {}
+                } catch (e) {}
         }
         function playUpgrade() {
             if (!soundOn || !audioCtx) return;
@@ -510,6 +541,8 @@
             updateRank();
             showNotification('💥 Let\'s Go!', 'Smash for cash!');
             rewardBtn.style.display = 'block';
+            rewardBtn.disabled = false;
+            restartBtn.disabled = false;
         }
 
         function showNotification(text, sub) {
@@ -929,34 +962,56 @@
             isPaused = false;
         }
 
-        restartBtn.addEventListener('click', restartGame);
+        function handleRestartRequest() {
+            if (restartBtn.disabled) return;
+            gamesPlayedCount++;
+            localStorage.setItem('bs_gamesPlayed', gamesPlayedCount);
+            if (gamesPlayedCount % 3 === 0) {
+                restartBtn.disabled = true;
+                showInterstitialAd(function() {
+                    restartBtn.disabled = false;
+                    restartGame();
+                });
+            } else {
+                restartGame();
+            }
+        }
+
+        restartBtn.addEventListener('click', handleRestartRequest);
         restartBtn.addEventListener('touchstart', function(e) {
             e.preventDefault();
-            restartGame();
+            handleRestartRequest();
         }, { passive: false });
 
         overlay.addEventListener('click', function(e) {
             if (e.target === overlay) {
                 if (restartBtn.style.display !== 'none') {
-                    restartGame();
+                    handleRestartRequest();
                 }
             }
         });
 
         rewardBtn.addEventListener('click', function() {
-            const multiplier = Math.random() < 0.3 ? 4 : 2;
-            currentScore = currentScore * multiplier;
-            document.getElementById('gameScore').textContent = currentScore;
-            finalScore.textContent = currentScore;
-            if (currentScore > highScore) {
-                highScore = currentScore;
-                localStorage.setItem('bs_highScore', highScore);
-                document.getElementById('gameHigh').textContent = highScore;
-                finalHigh.textContent = highScore;
-            }
-            showNotification('🎉 ' + multiplier + 'x Bonus Applied!', 'New Score: ' + currentScore);
-            rewardBtn.style.display = 'none';
-            saveScoreToSupabase(currentScore);
+            if (rewardBtn.disabled) return;
+            rewardBtn.disabled = true;
+            showRewardedAd(function onSuccess() {
+                const multiplier = Math.random() < 0.3 ? 4 : 2;
+                currentScore = currentScore * multiplier;
+                document.getElementById('gameScore').textContent = currentScore;
+                finalScore.textContent = currentScore;
+                if (currentScore > highScore) {
+                    highScore = currentScore;
+                    localStorage.setItem('bs_highScore', highScore);
+                    document.getElementById('gameHigh').textContent = highScore;
+                    finalHigh.textContent = highScore;
+                }
+                showNotification('🎉 ' + multiplier + 'x Bonus Applied!', 'New Score: ' + currentScore);
+                rewardBtn.style.display = 'none';
+                saveScoreToSupabase(currentScore);
+            }, function onFail() {
+                rewardBtn.disabled = false;
+                showNotification('❌ Ad Unavailable', 'Try again later');
+            });
         });
 
         function drawGame() {
@@ -1185,8 +1240,49 @@
             if (!gameOver) isPaused = true;
         });
 
-        function updateRank() {
-            document.getElementById('gameRank').textContent = '#—';
+        // Live rank: combines the player's saved total_points with the score
+        // of the current run, then compares against the rest of the
+        // leaderboard. Assumes supabase.js exposes window.getLeaderboard()
+        // returning an array of { username, total_points }. If that
+        // function doesn't exist yet, add it to supabase.js, e.g.:
+        //   window.getLeaderboard = async () => {
+        //     const { data } = await supabase.from('users').select('username,total_points');
+        //     return data;
+        //   };
+        let rankCache = null;
+        let lastRankFetch = 0;
+        let rankFetchInFlight = false;
+        const RANK_REFRESH_MS = 4000;
+
+        async function updateRank() {
+            if (rankCache !== null) {
+                document.getElementById('gameRank').textContent = '#' + rankCache;
+            }
+            const now = Date.now();
+            if (rankFetchInFlight || now - lastRankFetch < RANK_REFRESH_MS) return;
+            if (typeof window.getLeaderboard !== 'function') return;
+            const username = localStorage.getItem('bs_username');
+            if (!username) return;
+
+            rankFetchInFlight = true;
+            lastRankFetch = now;
+            try {
+                const leaderboard = await window.getLeaderboard();
+                if (!Array.isArray(leaderboard)) return;
+                const combinedScore = leaderboard.reduce((acc, u) => {
+                    return u.username === username ? (u.total_points || 0) + currentScore : acc;
+                }, currentScore);
+                let rank = 1;
+                for (const u of leaderboard) {
+                    if (u.username !== username && (u.total_points || 0) > combinedScore) rank++;
+                }
+                rankCache = rank;
+                document.getElementById('gameRank').textContent = '#' + rank;
+            } catch (e) {
+                console.error('Rank fetch failed:', e);
+            } finally {
+                rankFetchInFlight = false;
+            }
         }
 
         document.getElementById('gameSoundToggle').addEventListener('click', function() {
