@@ -355,7 +355,6 @@
         let gamesPlayedCount = parseInt(localStorage.getItem('bs_gamesPlayed')) || 0;
 
         function showInterstitialAd(onComplete) {
-        function showInterstitialAd(onComplete) {
             showNotification('📺 Loading Ad...', 'Please wait');
             if (typeof window.showReplayAd === 'function') {
                 window.showReplayAd(function () {
