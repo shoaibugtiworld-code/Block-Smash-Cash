@@ -438,3 +438,28 @@ window.getSetting = getSetting;
 window.setSetting = setSetting;
 
 console.log('✅ Supabase.js loaded successfully! All functions are ready.');
+
+// ================================================================
+// LEADERBOARD FUNCTION (for live rank in game.html)
+// Assumes a Supabase table named "users" with columns:
+// username (text) and total_points (number/int)
+// If your table/columns are named differently, change the two
+// strings below ('users', 'username', 'total_points').
+// ================================================================
+window.getLeaderboard = async function () {
+    try {
+        const { data, error } = await supabase
+            .from('users')
+            .select('username, total_points')
+            .order('total_points', { ascending: false });
+
+        if (error) {
+            console.error('getLeaderboard error:', error);
+            return [];
+        }
+        return data || [];
+    } catch (e) {
+        console.error('getLeaderboard failed:', e);
+        return [];
+    }
+};
